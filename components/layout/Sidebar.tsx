@@ -59,40 +59,43 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [settingsSection, setSettingsSection] = useState<SettingsSection | null>(null)
   const [indicator, setIndicator] = useState({ top: 0, height: 0, left: 0, width: 0 })
-  const [indicatorVisible, setIndicatorVisible] = useState(true)
+  const [indicatorVisible, setIndicatorVisible] = useState(false)
   const navRefs = useRef<(HTMLAnchorElement | null)[]>([])
   const navRef = useRef<HTMLElement>(null)
   const asideRef = useRef<HTMLElement>(null)
+  const collapsedRef = useRef(collapsed)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
 
-  function measure() {
+  function measure(isCollapsed: boolean) {
     const activeIndex = navItems.findIndex(item => isActive(item.href, item.exact))
     if (activeIndex === -1) return
     const el = navRefs.current[activeIndex]
     const nav = navRef.current
     if (!el || !nav) return
     const navW = nav.offsetWidth
-    const indL = collapsed ? Math.round((navW - 40) / 2) : el.offsetLeft
-    const indW = collapsed ? 40 : el.offsetWidth
+    const indL = isCollapsed ? Math.round((navW - 40) / 2) : el.offsetLeft
+    const indW = isCollapsed ? 40 : el.offsetWidth
     setIndicator({ top: el.offsetTop, height: el.offsetHeight, left: indL, width: indW })
   }
 
-  // Slide vertically on route change (nav width is stable here)
+  // Slide vertically on route change (nav width is stable)
   useLayoutEffect(() => {
-    measure()
+    measure(collapsedRef.current)
+    setIndicatorVisible(true)
   }, [pathname])
 
-  // Hide indicator during sidebar transition, remeasure after it ends
+  // Hide indicator during sidebar width transition, remeasure after it ends
   useEffect(() => {
+    collapsedRef.current = collapsed
     setIndicatorVisible(false)
     const aside = asideRef.current
     if (!aside) return
     function onTransitionEnd(e: TransitionEvent) {
       if (e.propertyName !== 'width') return
-      measure()
+      measure(collapsedRef.current)
       setIndicatorVisible(true)
     }
     aside.addEventListener('transitionend', onTransitionEnd)
@@ -160,19 +163,17 @@ export function Sidebar() {
         {/* Nav */}
         <nav ref={navRef} className={cn('relative flex-1 py-3 space-y-2', collapsed ? 'px-1' : 'px-2')}>
           {/* Indicador deslizante */}
-          {indicator.height > 0 && (
-            <span
-              className="absolute rounded-lg bg-[var(--color-accent-muted)] pointer-events-none"
-              style={{
-                top: indicator.top,
-                height: indicator.height,
-                left: indicator.left,
-                width: indicator.width,
-                opacity: indicatorVisible ? 1 : 0,
-                transition: indicatorVisible ? 'top 200ms ease-out, height 200ms ease-out, left 200ms ease-out, width 200ms ease-out, opacity 150ms ease-out' : 'none',
-              }}
-            />
-          )}
+          <span
+            className="absolute rounded-lg bg-[var(--color-accent-muted)] pointer-events-none"
+            style={{
+              top: indicator.top,
+              height: indicator.height,
+              left: indicator.left,
+              width: indicator.width,
+              opacity: indicatorVisible && indicator.height > 0 ? 1 : 0,
+              transition: 'top 220ms ease-out, left 220ms ease-out, width 220ms ease-out, height 220ms ease-out, opacity 150ms ease-out',
+            }}
+          />
 
           {navItems.map((item, i) => (
             <Link
