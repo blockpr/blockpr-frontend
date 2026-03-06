@@ -2,7 +2,7 @@
 
 @theme inline {
   /* Tipografías */
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 
   /* Paleta base */
@@ -35,7 +35,40 @@
 body {
   background-color: var(--color-base);
   color: var(--color-text-primary);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui, sans-serif;
+}
+
+/* Animación genie (estilo macOS) — origen en card del sidebar */
+@keyframes genie-in {
+  from {
+    transform: translate(-22%, 52%) scale(0.06);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-genie {
+  animation: genie-in 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom left;
+}
+
+@keyframes genie-out {
+  from {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-22%, 52%) scale(0.06);
+    opacity: 0;
+  }
+}
+
+.animate-genie-out {
+  animation: genie-out 0.38s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  transform-origin: bottom left;
 }
 
 /* Scrollbar personalizado */

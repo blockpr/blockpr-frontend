@@ -27,7 +27,8 @@ export default function DashboardPage() {
         description="Resumen de actividad de tu cuenta"
       />
 
-      {/* Stats */}
+      {/* Stats + tabla agrupados con mismo gap */}
+      <div className="space-y-4">
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatsCard
           label="Total emitidos"
@@ -75,6 +76,7 @@ export default function DashboardPage() {
 
       {/* Emisiones recientes */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+
         <div className="px-6 py-4 flex items-center justify-between border-b border-[var(--color-border)]">
           <div>
             <h2 className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -139,6 +141,7 @@ export default function DashboardPage() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   )

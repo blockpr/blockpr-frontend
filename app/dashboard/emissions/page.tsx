@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { EmissionsTable } from '@/components/emissions/EmissionsTable'
@@ -28,6 +28,14 @@ export default function EmissionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmissionStatus | 'all'>('all')
   const [page, setPage] = useState(1)
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+
+  useLayoutEffect(() => {
+    const activeIndex = STATUS_OPTIONS.findIndex(o => o.value === statusFilter)
+    const btn = btnRefs.current[activeIndex]
+    if (btn) setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth })
+  }, [statusFilter])
 
   const filtered = useMemo(() => {
     return ALL_EMISSIONS.filter((e) => {
@@ -83,14 +91,22 @@ export default function EmissionsPage() {
         </div>
 
         {/* Filtro de estado */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]">
-          {STATUS_OPTIONS.map((opt) => (
+        <div className="relative flex items-center p-1 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]">
+          {/* Indicador deslizante */}
+          {indicator.width > 0 && (
+            <span
+              className="absolute top-1 bottom-1 rounded-md bg-[var(--color-accent)] transition-all duration-200 ease-out pointer-events-none"
+              style={{ left: indicator.left, width: indicator.width }}
+            />
+          )}
+          {STATUS_OPTIONS.map((opt, i) => (
             <button
               key={opt.value}
+              ref={el => { btnRefs.current[i] = el }}
               onClick={() => handleStatus(opt.value)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`relative z-10 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 statusFilter === opt.value
-                  ? 'bg-[var(--color-accent)] text-white'
+                  ? 'text-white'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
               }`}
             >
