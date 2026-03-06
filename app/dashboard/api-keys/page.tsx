@@ -238,14 +238,27 @@ export default function ApiKeysPage() {
       </div>
 
       {/* Nota de seguridad */}
-      <div className="flex gap-3 p-4 rounded-xl border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)]">
-        <svg className="w-4 h-4 text-[var(--color-warning)] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-        </svg>
-        <p className="text-xs text-[var(--color-warning)]">
-          Las API keys dan acceso completo a tu cuenta. Nunca las compartas ni las incluyas en código
-          público. Si creés que una key fue comprometida, eliminala inmediatamente.
-        </p>
+      <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-warning-border)', background: 'var(--color-warning-surface)' }}>
+        <div className="flex items-center gap-2.5 px-4 py-2.5 border-b" style={{ background: 'var(--color-warning-header-bg)', borderColor: 'var(--color-warning-header-border)' }}>
+          <svg className="w-3.5 h-3.5 shrink-0 text-[var(--color-warning)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <span className="text-xs font-semibold tracking-wide uppercase text-[var(--color-warning)]">
+            Seguridad
+          </span>
+        </div>
+        <ul className="px-4 py-3 space-y-1.5">
+          {[
+            'Las API keys dan acceso completo a tu cuenta. Tratálas como contraseñas.',
+            'Nunca las incluyas en código público ni las compartas por canales inseguros.',
+            'Si sospechás que una key fue comprometida, eliminala de inmediato.',
+          ].map((tip) => (
+            <li key={tip} className="flex items-start gap-2 text-xs" style={{ color: 'var(--color-warning-text-dim)' }}>
+              <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: 'var(--color-warning-text-dim)' }} />
+              {tip}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )

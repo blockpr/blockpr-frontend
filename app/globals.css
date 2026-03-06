@@ -71,6 +71,39 @@ body {
   transform-origin: bottom left;
 }
 
+/* Variables warning banner (dark por defecto) */
+:root {
+  --color-warning-surface: #110e04;
+  --color-warning-border: rgba(245,158,11,0.18);
+  --color-warning-header-bg: rgba(245,158,11,0.06);
+  --color-warning-header-border: rgba(245,158,11,0.12);
+  --color-warning-text-dim: #a67c3a;
+}
+
+/* Tema claro */
+[data-theme="light"] {
+  --color-base: #f8fafc;
+  --color-surface: #ffffff;
+  --color-card: #f1f5f9;
+  --color-card-hover: #e2e8f0;
+  --color-border: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-accent-muted: #dbeafe;
+  --color-success-muted: #dcfce7;
+  --color-warning-muted: #fef9c3;
+  --color-danger-muted: #fee2e2;
+
+  --color-warning-surface: #eff6ff;
+  --color-warning-border: rgba(59,130,246,0.25);
+  --color-warning-header-bg: rgba(59,130,246,0.08);
+  --color-warning-header-border: rgba(59,130,246,0.15);
+  --color-warning-text-dim: #1e40af;
+  --color-warning: #3b82f6;
+}
+
 /* Scrollbar personalizado */
 ::-webkit-scrollbar {
   width: 6px;

@@ -123,7 +123,7 @@ export function Sidebar() {
       <aside
         ref={asideRef}
         className={cn(
-          'shrink-0 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden',
+          'shrink-0 flex flex-col bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl my-3 ml-3 transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden',
           collapsed ? 'w-16 cursor-pointer' : 'w-64'
         )}
         onMouseEnter={handleMouseEnter}
@@ -131,8 +131,8 @@ export function Sidebar() {
         onClick={handleSidebarClick}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center px-3 shrink-0">
-          <div className={cn('flex items-center gap-2', collapsed && 'w-full justify-center')}>
+        <div className={cn('h-16 flex items-center shrink-0', collapsed ? 'justify-center' : 'px-3')}>
+          <div className={cn('flex items-center gap-2')}>
             <div className={cn(
               'rounded-lg bg-[var(--color-accent)] flex items-center justify-center shrink-0 transition-all duration-300',
               collapsed ? 'w-9 h-9' : 'w-7 h-7'
