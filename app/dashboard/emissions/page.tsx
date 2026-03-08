@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { EmissionsTable } from '@/components/emissions/EmissionsTable'
 import { MOCK_EMISSIONS } from '@/lib/mocks/emissions'
 import type { EmissionStatus, Emission } from '@/types'
@@ -62,12 +61,7 @@ export default function EmissionsPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <PageHeader
-        title="Emisiones"
-        description={`${filtered.length} certificados encontrados`}
-      />
-
+    <div className="p-8 space-y-6 bg-[var(--color-base)] min-h-full">
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Búsqueda */}
@@ -86,16 +80,16 @@ export default function EmissionsPage() {
             placeholder="Buscar por ID o hash..."
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
+            className="w-full pl-9 pr-4 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
           />
         </div>
 
         {/* Filtro de estado */}
-        <div className="relative flex items-center p-1 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]">
+        <div className="relative flex items-center p-1 bg-[var(--color-card)] border border-[var(--color-border)]">
           {/* Indicador deslizante */}
           {indicator.width > 0 && (
             <span
-              className="absolute top-1 bottom-1 rounded-md bg-[var(--color-accent)] transition-all duration-200 ease-out pointer-events-none"
+              className="absolute top-1 bottom-1 rounded-md bg-white transition-all duration-200 ease-out pointer-events-none"
               style={{ left: indicator.left, width: indicator.width }}
             />
           )}
@@ -104,9 +98,9 @@ export default function EmissionsPage() {
               key={opt.value}
               ref={el => { btnRefs.current[i] = el }}
               onClick={() => handleStatus(opt.value)}
-              className={`relative z-10 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`relative z-10 px-3 py-1.5 text-xs font-medium transition-colors ${
                 statusFilter === opt.value
-                  ? 'text-white'
+                  ? 'text-black'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
               }`}
             >
@@ -117,7 +111,7 @@ export default function EmissionsPage() {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+      <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
         <EmissionsTable
           data={paginated}
           onRowClick={(emission) => router.push(`/dashboard/emissions/${emission.id}`)}
@@ -133,7 +127,7 @@ export default function EmissionsPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ← Anterior
               </button>
@@ -153,7 +147,7 @@ export default function EmissionsPage() {
                     <button
                       key={item}
                       onClick={() => setPage(item as number)}
-                      className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                      className={`w-8 h-8 text-xs font-medium transition-colors ${
                         page === item
                           ? 'bg-[var(--color-accent)] text-white'
                           : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)]'
@@ -166,7 +160,7 @@ export default function EmissionsPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 rounded-lg text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Siguiente →
               </button>

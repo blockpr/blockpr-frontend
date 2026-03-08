@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { StatsCard } from '@/components/shared/StatsCard'
 import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
-import { MOCK_EMISSIONS, MOCK_COMPANY } from '@/lib/mocks/emissions'
+import { MOCK_EMISSIONS } from '@/lib/mocks/emissions'
 import { formatDate } from '@/lib/utils'
 
 const stats = {
@@ -16,17 +15,8 @@ const stats = {
 const recent = MOCK_EMISSIONS.slice(0, 5)
 
 export default function DashboardPage() {
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches'
-
   return (
-    <div className="p-8 space-y-8">
-      {/* Header */}
-      <PageHeader
-        title={`${greeting}, ${MOCK_COMPANY.name}`}
-        description="Resumen de actividad de tu cuenta"
-      />
-
+    <div className="p-8 space-y-8 bg-[var(--color-base)] min-h-full">
       {/* Stats + tabla agrupados con mismo gap */}
       <div className="space-y-4">
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -75,7 +65,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Emisiones recientes */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+      <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
 
         <div className="px-6 py-4 flex items-center justify-between border-b border-[var(--color-border)]">
           <div>
@@ -88,7 +78,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/dashboard/emissions"
-            className="text-xs text-[var(--color-accent)] hover:underline"
+            className="text-xs text-black hover:underline"
           >
             Ver todas →
           </Link>
@@ -132,9 +122,11 @@ export default function DashboardPage() {
                 <td className="px-6 py-3.5 text-right">
                   <Link
                     href={`/dashboard/emissions/${emission.id}`}
-                    className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                   >
-                    Ver →
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
                   </Link>
                 </td>
               </tr>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { MOCK_API_KEYS } from '@/lib/mocks/emissions'
 import { formatDate } from '@/lib/utils'
@@ -44,9 +43,9 @@ function NewKeyModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+      <div className="w-full max-w-md border border-[var(--color-border)] bg-[var(--color-card)] p-6">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-9 h-9 rounded-full bg-[var(--color-success-muted)] flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 bg-[var(--color-success-muted)] flex items-center justify-center shrink-0">
             <svg className="w-5 h-5 text-[var(--color-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
             </svg>
@@ -61,7 +60,7 @@ function NewKeyModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] mb-5">
+        <div className="flex items-center gap-2 p-3 bg-[var(--color-surface)] border border-[var(--color-border)] mb-5">
           <code className="flex-1 text-xs font-mono text-[var(--color-text-primary)] break-all">
             {secret}
           </code>
@@ -109,26 +108,22 @@ export default function ApiKeysPage() {
   }
 
   return (
-    <div className="p-8 space-y-6 max-w-3xl">
+    <div className="p-8 space-y-6 max-w-3xl bg-[var(--color-base)] min-h-full">
       {newSecret && (
         <NewKeyModal secret={newSecret} onClose={() => setNewSecret(null)} />
       )}
 
-      <PageHeader
-        title="API Keys"
-        description="Claves de acceso para integrar BlockPR con tus sistemas"
-        actions={
-          !showCreateForm && (
-            <Button onClick={() => setShowCreateForm(true)} size="sm">
-              + Nueva key
-            </Button>
-          )
-        }
-      />
+      {!showCreateForm && (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowCreateForm(true)} size="sm" className="!rounded-none bg-white !text-black hover:bg-gray-100">
+            + Nueva key
+          </Button>
+        </div>
+      )}
 
       {/* Formulario de creación */}
       {showCreateForm && (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+        <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
             Nueva API Key
           </p>
@@ -140,9 +135,9 @@ export default function ApiKeysPage() {
               value={creatingName}
               onChange={(e) => setCreatingName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              className="flex-1 px-3.5 py-2 rounded-lg text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
+              className="flex-1 px-3.5 py-2 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
             />
-            <Button onClick={handleCreate} disabled={!creatingName.trim()}>
+            <Button onClick={handleCreate} disabled={!creatingName.trim()} className="!rounded-none bg-white !text-black hover:bg-gray-100">
               Generar
             </Button>
             <Button
@@ -151,6 +146,7 @@ export default function ApiKeysPage() {
                 setShowCreateForm(false)
                 setCreatingName('')
               }}
+              className="!rounded-none"
             >
               Cancelar
             </Button>
@@ -159,7 +155,7 @@ export default function ApiKeysPage() {
       )}
 
       {/* Lista de keys */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+      <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
         {keys.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-sm text-[var(--color-text-secondary)]">No hay API keys creadas</p>
@@ -190,7 +186,7 @@ export default function ApiKeysPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <code className="text-xs font-mono text-[var(--color-text-secondary)] bg-[var(--color-surface)] px-2 py-1 rounded">
+                    <code className="text-xs font-mono text-[var(--color-text-secondary)] bg-[var(--color-surface)] px-2 py-1">
                       {key.prefix}
                     </code>
                   </td>

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { MOCK_COMPANY } from '@/lib/mocks/emissions'
@@ -73,12 +72,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-8 space-y-6 max-w-2xl">
-      <PageHeader
-        title="Perfil"
-        description="Configuración de tu empresa"
-      />
-
+    <div className="p-8 space-y-6 max-w-2xl bg-[var(--color-base)] min-h-full">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Plan actual */}
         <SectionCard title="Plan actual">

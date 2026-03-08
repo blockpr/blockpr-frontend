@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useRef, useCallback, useLayoutEffect, useEffect } from 'react'
+import { useState, useRef, useLayoutEffect, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { SettingsModal, type SettingsSection } from '@/components/layout/SettingsModal'
-import { PanelLeftClose } from 'lucide-react'
+import { useThemeStore } from '@/stores/themeStore'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 const navItems = [
   {
@@ -53,18 +54,22 @@ function UserAvatar({ name, image }: { name?: string | null; image?: string | nu
   )
 }
 
+
 export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { theme } = useThemeStore()
+  const logoColor = theme === 'light' ? '#1a1a22' : '#ffffff'
+
   const [collapsed, setCollapsed] = useState(false)
   const [settingsSection, setSettingsSection] = useState<SettingsSection | null>(null)
+
+  // Active indicator
   const [indicator, setIndicator] = useState({ top: 0, height: 0, left: 0, width: 0 })
-  const [indicatorVisible, setIndicatorVisible] = useState(false)
+  const [indicatorReady, setIndicatorReady] = useState(false)
   const navRefs = useRef<(HTMLAnchorElement | null)[]>([])
   const navRef = useRef<HTMLElement>(null)
   const asideRef = useRef<HTMLElement>(null)
-  const collapsedRef = useRef(collapsed)
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
@@ -81,41 +86,24 @@ export function Sidebar() {
     setIndicator({ top: el.offsetTop, height: el.offsetHeight, left: indL, width: indW })
   }
 
-  // Slide vertically on route change (nav width is stable)
+  // Remeasure on route change
   useLayoutEffect(() => {
-    measure(collapsedRef.current)
-    setIndicatorVisible(true)
+    measure(collapsed)
+    setIndicatorReady(true)
   }, [pathname])
 
-  // Hide indicator during sidebar width transition, remeasure after it ends
+  // Hide indicator during width transition, remeasure after
   useEffect(() => {
-    collapsedRef.current = collapsed
-    setIndicatorVisible(false)
+    setIndicatorReady(false)
     const aside = asideRef.current
     if (!aside) return
-    function onTransitionEnd(e: TransitionEvent) {
+    function onEnd(e: TransitionEvent) {
       if (e.propertyName !== 'width') return
-      measure(collapsedRef.current)
-      setIndicatorVisible(true)
+      measure(collapsed)
+      setIndicatorReady(true)
     }
-    aside.addEventListener('transitionend', onTransitionEnd)
-    return () => aside.removeEventListener('transitionend', onTransitionEnd)
-  }, [collapsed])
-
-  const handleMouseEnter = useCallback(() => {
-    if (!collapsed) return
-    hoverTimer.current = setTimeout(() => setCollapsed(false), 1000)
-  }, [collapsed])
-
-  const handleMouseLeave = useCallback(() => {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current)
-      hoverTimer.current = null
-    }
-  }, [])
-
-  const handleSidebarClick = useCallback(() => {
-    if (collapsed) setCollapsed(false)
+    aside.addEventListener('transitionend', onEnd)
+    return () => aside.removeEventListener('transitionend', onEnd)
   }, [collapsed])
 
   return (
@@ -123,119 +111,147 @@ export function Sidebar() {
       <aside
         ref={asideRef}
         className={cn(
-          'shrink-0 flex flex-col bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl my-3 ml-3 transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden',
-          collapsed ? 'w-16 cursor-pointer' : 'w-64'
+          'shrink-0 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
+          collapsed ? 'w-16' : 'w-72'
         )}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleSidebarClick}
       >
-        {/* Logo */}
-        <div className={cn('h-16 flex items-center shrink-0', collapsed ? 'justify-center' : 'px-3')}>
-          <div className={cn('flex items-center gap-2')}>
-            <div className={cn(
-              'rounded-lg bg-[var(--color-accent)] flex items-center justify-center shrink-0 transition-all duration-300',
-              collapsed ? 'w-9 h-9' : 'w-7 h-7'
-            )}>
-              <svg className={cn('text-white transition-all duration-300', collapsed ? 'w-5 h-5' : 'w-4 h-4')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+        {collapsed ? (
+          /* ── COLLAPSED VIEW ── */
+          <div className="flex flex-col h-full cursor-pointer" onClick={() => setCollapsed(false)}>
+            {/* Logo SVG centrado */}
+            <div className="h-16 flex items-center justify-center shrink-0">
+              <svg className="w-8 h-8" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: logoColor }}>
+                <path d="M100 100V42" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M100 100L148 128" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M100 100L52 128" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M100 114C107.732 114 114 107.732 114 100C114 92.268 107.732 86 100 86C92.268 86 86 92.268 86 100C86 107.732 92.268 114 100 114Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                <path d="M100 50C104.418 50 108 46.4183 108 42C108 37.5817 104.418 34 100 34C95.5817 34 92 37.5817 92 42C92 46.4183 95.5817 50 100 50Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                <path d="M148 136C152.418 136 156 132.418 156 128C156 123.582 152.418 120 148 120C143.582 120 140 123.582 140 128C140 132.418 143.582 136 148 136Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                <path d="M52 136C56.4183 136 60 132.418 60 128C60 123.582 56.4183 120 52 120C47.5817 120 44 123.582 44 128C44 132.418 47.5817 136 52 136Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                <path d="M100 104C102.209 104 104 102.209 104 100C104 97.7909 102.209 96 100 96C97.7909 96 96 97.7909 96 100C96 102.209 97.7909 104 100 104Z" fill="currentColor"/>
               </svg>
             </div>
-            <span className={cn(
-              'font-semibold text-[var(--color-text-primary)] tracking-tight whitespace-nowrap transition-opacity duration-200',
-              collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-            )}>
-              BlockPR
-            </span>
-          </div>
 
-          {!collapsed && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setCollapsed(true) }}
-              className="ml-auto p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)] transition-colors shrink-0"
-              title="Cerrar sidebar"
-            >
-              <PanelLeftClose className="w-[18px] h-[18px]" />
-            </button>
-          )}
-        </div>
+            <div className="border-b border-[var(--color-border)]" />
 
-        {/* Nav */}
-        <nav ref={navRef} className={cn('relative flex-1 py-3 space-y-2', collapsed ? 'px-1' : 'px-2')}>
-          {/* Indicador deslizante */}
-          <span
-            className="absolute rounded-lg bg-[var(--color-accent-muted)] pointer-events-none"
-            style={{
-              top: indicator.top,
-              height: indicator.height,
-              left: indicator.left,
-              width: indicator.width,
-              opacity: indicatorVisible && indicator.height > 0 ? 1 : 0,
-              transition: 'top 220ms ease-out, left 220ms ease-out, width 220ms ease-out, height 220ms ease-out, opacity 150ms ease-out',
-            }}
-          />
+            {/* Nav icons */}
+            <nav className="flex-1 flex flex-col items-center gap-1 py-4">
+              {navItems.map((item) => {
+                const active = isActive(item.href, item.exact)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={item.label}
+                    className={cn(
+                      'relative w-10 h-10 flex items-center justify-center rounded-lg transition-colors',
+                      active
+                        ? 'bg-[var(--color-nav-active-bg)] text-[var(--color-nav-active-text)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)]'
+                    )}
+                  >
+                    {item.icon}
+                  </Link>
+                )
+              })}
+            </nav>
 
-          {navItems.map((item, i) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              ref={el => { navRefs.current[i] = el }}
-              onClick={(e) => collapsed && e.stopPropagation()}
-              title={collapsed ? item.label : undefined}
-              className={cn(
-                'relative z-10 flex items-center rounded-lg text-sm transition-colors',
-                collapsed
-                  ? 'justify-center py-3 w-full'
-                  : 'gap-3 px-3 py-2.5',
-                isActive(item.href, item.exact)
-                  ? 'text-[var(--color-accent)] font-medium'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-              )}
-            >
-              {item.icon}
-              <span className={cn(
-                'whitespace-nowrap transition-opacity duration-200',
-                collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-              )}>
-                {item.label}
-              </span>
-            </Link>
-          ))}
-        </nav>
-
-        {/* User card */}
-        <div className={cn('py-3', collapsed ? 'flex justify-center px-1' : 'px-2')}>
-          {collapsed ? (
-            <button
-              onClick={(e) => { e.stopPropagation() }}
-              title={session?.user?.name ?? 'Perfil'}
-              className="w-10 h-10 rounded-full flex items-center justify-center hover:ring-2 hover:ring-[var(--color-accent)]/40 transition-all"
-            >
-              <UserAvatar name={session?.user?.name} image={session?.user?.image} />
-            </button>
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); setSettingsSection('perfil') }}
-              className="w-full flex items-center gap-3 px-3 py-3.5 rounded-[10px] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left"
-            >
-              <UserAvatar name={session?.user?.name} image={session?.user?.image} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--color-text-primary)] truncate leading-none mb-1">
-                  {session?.user?.name ?? 'Usuario'}
-                </p>
-                <p className="text-xs text-[var(--color-text-muted)] truncate leading-none">
-                  {session?.user?.email ?? ''}
-                </p>
-              </div>
-              <svg
-                className="w-3.5 h-3.5 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors shrink-0"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+            {/* Avatar */}
+            <div className="flex justify-center pb-4">
+              <button
+                title={session?.user?.name ?? 'Perfil'}
+                className="w-9 h-9 rounded-full overflow-hidden hover:ring-2 hover:ring-[var(--color-border)] transition-all"
+                onClick={e => e.stopPropagation()}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
-              </svg>
-            </button>
-          )}
-        </div>
+                <UserAvatar name={session?.user?.name} image={session?.user?.image} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* ── EXPANDED VIEW ── */
+          <>
+            {/* Header: logo + close */}
+            <div className="h-16 flex items-center shrink-0 px-3 gap-2">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0" style={{ color: logoColor }}>
+                <svg className="w-9 h-9 shrink-0" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M100 100V42" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M100 100L148 128" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M100 100L52 128" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M100 114C107.732 114 114 107.732 114 100C114 92.268 107.732 86 100 86C92.268 86 86 92.268 86 100C86 107.732 92.268 114 100 114Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                  <path d="M100 50C104.418 50 108 46.4183 108 42C108 37.5817 104.418 34 100 34C95.5817 34 92 37.5817 92 42C92 46.4183 95.5817 50 100 50Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                  <path d="M148 136C152.418 136 156 132.418 156 128C156 123.582 152.418 120 148 120C143.582 120 140 123.582 140 128C140 132.418 143.582 136 148 136Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                  <path d="M52 136C56.4183 136 60 132.418 60 128C60 123.582 56.4183 120 52 120C47.5817 120 44 123.582 44 128C44 132.418 47.5817 136 52 136Z" fill="currentColor" stroke="currentColor" strokeWidth="4.5"/>
+                  <path d="M100 104C102.209 104 104 102.209 104 100C104 97.7909 102.209 96 100 96C97.7909 96 96 97.7909 96 100C96 102.209 97.7909 104 100 104Z" fill="currentColor"/>
+                </svg>
+                <span className="font-semibold text-base tracking-tight whitespace-nowrap" style={{ color: logoColor }}>
+                  uniquey
+                </span>
+              </div>
+              <button
+                onClick={() => setCollapsed(true)}
+                className="shrink-0 p-1.5 rounded-md transition-colors"
+                style={{ color: logoColor }}
+                title="Cerrar sidebar"
+              >
+                <PanelLeftClose className="w-[18px] h-[18px]" />
+              </button>
+            </div>
+
+            <div className="border-b border-[var(--color-border)]" />
+
+            {/* Nav */}
+            <nav ref={navRef} className="relative flex-1 py-3 space-y-1 px-2">
+              <span
+                className="absolute rounded-lg pointer-events-none bg-[var(--color-nav-active-bg)]"
+                style={{
+                  top: indicator.top,
+                  height: indicator.height,
+                  left: indicator.left,
+                  width: indicator.width,
+                  opacity: indicatorReady && indicator.height > 0 ? 1 : 0,
+                  transition: 'top 200ms ease, left 200ms ease, width 200ms ease, opacity 120ms ease',
+                }}
+              />
+              {navItems.map((item, i) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  ref={el => { navRefs.current[i] = el }}
+                  className={cn(
+                    'relative z-10 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                    isActive(item.href, item.exact)
+                      ? 'font-medium text-[var(--color-nav-active-text)]'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                  )}
+                >
+                  {item.icon}
+                  <span className="whitespace-nowrap">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+
+            {/* User card */}
+            <div className="px-2 py-3">
+              <button
+                onClick={() => setSettingsSection('perfil')}
+                className="w-full flex items-center gap-3 px-3 py-5 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left"
+              >
+                <UserAvatar name={session?.user?.name} image={session?.user?.image} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] truncate leading-none mb-1">
+                    {session?.user?.name ?? 'Usuario'}
+                  </p>
+                  <p className="text-xs text-[var(--color-text-muted)] truncate leading-none">
+                    {session?.user?.email ?? ''}
+                  </p>
+                </div>
+                <svg className="w-3.5 h-3.5 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
+                </svg>
+              </button>
+            </div>
+          </>
+        )}
       </aside>
 
       {settingsSection && (
