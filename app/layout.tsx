@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <SessionProvider>
           <QueryProvider>{children}</QueryProvider>
         </SessionProvider>

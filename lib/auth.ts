@@ -2,9 +2,13 @@ import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 
+const API_URL =
+  process.env.API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:8000'
+
 export const authOptions: NextAuthOptions = {
   providers: [
-    // TODO: agregar GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en .env.local
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
@@ -16,18 +20,26 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // TODO: reemplazar con llamada real a la API cuando el backend esté listo
-        if (
-          credentials?.email === 'demo@blockpr.io' &&
-          credentials?.password === 'demo1234'
-        ) {
-          return {
-            id: 'comp_001',
-            email: 'demo@blockpr.io',
-            name: 'AutoCheck SA',
-          }
+        const res = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: credentials?.email,
+            password: credentials?.password,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          if (res.status === 403) throw new Error('EmailNotVerified')
+          return null
         }
-        return null
+        return {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.company_name,
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
+        }
       },
     }),
   ],
@@ -53,13 +65,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.companyId = user.id
+        token.id = user.id
+        token.accessToken = (user as { accessToken?: string }).accessToken
+        token.refreshToken = (user as { refreshToken?: string }).refreshToken
       }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.companyId as string
+        session.user.id = token.id as string
+        session.user.accessToken = token.accessToken as string | undefined
       }
       return session
     },

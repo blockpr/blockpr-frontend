@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { authApi } from '@/lib/api'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
@@ -26,8 +27,11 @@ export default function ForgotPasswordPage() {
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
   async function onSubmit(data: FormData) {
-    // TODO: llamar a la API de recuperación cuando el backend esté listo
-    await new Promise((r) => setTimeout(r, 800)) // mock delay
+    try {
+      await authApi.forgotPassword(data.email)
+    } catch {
+      // API always returns 200 to avoid user enumeration
+    }
     setSentEmail(data.email)
     setSent(true)
   }

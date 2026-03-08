@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { authApi } from '@/lib/api'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
@@ -56,6 +57,10 @@ export default function LoginPage() {
   const router = useRouter()
   const [authError, setAuthError] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showResend, setShowResend] = useState(false)
+  const [resendEmail, setResendEmail] = useState('')
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSent, setResendSent] = useState(false)
 
   const {
     register,
@@ -65,6 +70,8 @@ export default function LoginPage() {
 
   async function onSubmit(data: FormData) {
     setAuthError(null)
+    setShowResend(false)
+    setResendSent(false)
     const result = await signIn('credentials', {
       email: data.email,
       password: data.password,
@@ -72,12 +79,30 @@ export default function LoginPage() {
     })
 
     if (result?.error) {
-      setAuthError('Email o contraseña incorrectos')
+      if (result.error === 'EmailNotVerified') {
+        setAuthError('Debés verificar tu email antes de iniciar sesión.')
+        setResendEmail(data.email)
+        setShowResend(true)
+      } else {
+        setAuthError('Email o contraseña incorrectos')
+      }
       return
     }
 
     router.push('/dashboard')
     router.refresh()
+  }
+
+  async function handleResend() {
+    setResendLoading(true)
+    try {
+      await authApi.resendVerification(resendEmail)
+    } catch {
+      // API always returns 200 to avoid enumeration
+    } finally {
+      setResendLoading(false)
+      setResendSent(true)
+    }
   }
 
   async function handleGoogle() {
@@ -101,6 +126,24 @@ export default function LoginPage() {
           {authError && (
             <div className="px-3.5 py-3 rounded-lg bg-[var(--color-danger-muted)] border border-[var(--color-danger)]/20">
               <p className="text-sm text-[var(--color-danger)]">{authError}</p>
+              {showResend && (
+                <div className="mt-2">
+                  {resendSent ? (
+                    <p className="text-xs text-[var(--color-text-secondary)]">
+                      Email de verificación reenviado. Revisá tu bandeja.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resendLoading}
+                      className="text-xs text-[var(--color-accent)] hover:underline disabled:opacity-50"
+                    >
+                      {resendLoading ? 'Enviando...' : 'Reenviar email de verificación'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

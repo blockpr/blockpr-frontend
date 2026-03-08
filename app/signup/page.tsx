@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +9,7 @@ import { z } from 'zod'
 import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { authApi } from '@/lib/api'
 
 const schema = z
   .object({
@@ -77,9 +77,10 @@ function formatCuit(value: string): string {
 }
 
 export default function SignupPage() {
-  const router = useRouter()
   const [googleLoading, setGoogleLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [registeredEmail, setRegisteredEmail] = useState('')
+  const [registered, setRegistered] = useState(false)
 
   const {
     register,
@@ -90,28 +91,60 @@ export default function SignupPage() {
 
   async function onSubmit(data: FormData) {
     setServerError(null)
-    // TODO: llamar a la API de registro cuando el backend esté listo
-    console.log('Registro:', data)
-
-    // Mock: auto-login después del registro
-    const result = await signIn('credentials', {
-      email: 'demo@blockpr.io',
-      password: 'demo1234',
-      redirect: false,
-    })
-
-    if (result?.error) {
-      setServerError('Ocurrió un error. Intentá de nuevo.')
-      return
+    try {
+      await authApi.register({
+        email: data.email,
+        password: data.password,
+        company_name: data.companyName,
+        tax_id: data.cuit,
+        contact_name: data.contactName,
+        address: data.address,
+      })
+      setRegisteredEmail(data.email)
+      setRegistered(true)
+    } catch (err: unknown) {
+      const apiErr = err as { status?: number }
+      if (apiErr.status === 409) {
+        setServerError('Ya existe una cuenta con ese email.')
+      } else {
+        setServerError('Ocurrió un error al crear la cuenta. Intentá de nuevo.')
+      }
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   async function handleGoogle() {
     setGoogleLoading(true)
     await signIn('google', { callbackUrl: '/dashboard' })
+  }
+
+  if (registered) {
+    return (
+      <AuthLayout>
+        <div className="text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-[var(--color-success-muted)] flex items-center justify-center mb-5">
+            <svg className="w-6 h-6 text-[var(--color-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+            ¡Cuenta creada!
+          </h1>
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+            Enviamos un email de verificación a{' '}
+            <span className="text-[var(--color-text-primary)] font-medium">{registeredEmail}</span>
+          </p>
+          <p className="mt-3 text-xs text-[var(--color-text-muted)]">
+            Hacé click en el enlace del email para activar tu cuenta y poder iniciar sesión.
+          </p>
+          <Link
+            href="/login"
+            className="inline-block mt-8 text-sm text-[var(--color-accent)] hover:underline font-medium"
+          >
+            Ir al inicio de sesión →
+          </Link>
+        </div>
+      </AuthLayout>
+    )
   }
 
   return (
