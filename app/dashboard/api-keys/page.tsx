@@ -173,7 +173,6 @@ function mapApiKeyResponse(response: ApiKeyResponse): ApiKey {
   }
 }
 
-// Componente Skeleton para las filas de la tabla
 function ApiKeyTableSkeleton() {
   return (
     <div className="overflow-x-auto">
