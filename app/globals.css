@@ -6,8 +6,8 @@
   --font-mono: var(--font-geist-mono);
 
   /* Nav active */
-  --color-nav-active-bg: #ffffff;
-  --color-nav-active-text: #000000;
+  --color-nav-active-bg: #1f1f23;
+  --color-nav-active-text: #e0e0e5;
 
   /* Paleta base — dark (neutral zinc, sin tinte azul) */
   --color-base: #0c0c0d;
@@ -88,8 +88,8 @@ body {
 /* Tema claro */
 [data-theme="light"] {
   /* Nav active */
-  --color-nav-active-bg: #000000;
-  --color-nav-active-text: #ffffff;
+  --color-nav-active-bg: #f0f0f4;
+  --color-nav-active-text: #1a1a22;
 
   --color-base: #f4f4f6;
   --color-surface: #ffffff;

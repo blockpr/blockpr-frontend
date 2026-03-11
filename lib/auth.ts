@@ -63,12 +63,41 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // Cuando el usuario inicia sesión, guardar los tokens
       if (user) {
         token.id = user.id
         token.accessToken = (user as { accessToken?: string }).accessToken
         token.refreshToken = (user as { refreshToken?: string }).refreshToken
+        return token
       }
+
+      // Si se solicita actualizar explícitamente (trigger === 'update'), refrescar el token
+      if (trigger === 'update' && token.refreshToken) {
+        try {
+          const res = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: token.refreshToken }),
+          })
+
+          if (res.ok) {
+            const data = await res.json()
+            token.accessToken = data.access_token
+            token.refreshToken = data.refresh_token
+            return token
+          } else {
+            // Si el refresh falla, limpiar los tokens para forzar re-login
+            token.accessToken = undefined
+            token.refreshToken = undefined
+          }
+        } catch (error) {
+          // Si hay un error, limpiar los tokens
+          token.accessToken = undefined
+          token.refreshToken = undefined
+        }
+      }
+
       return token
     },
     async session({ session, token }) {

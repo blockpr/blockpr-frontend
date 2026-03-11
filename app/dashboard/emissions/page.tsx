@@ -80,12 +80,12 @@ export default function EmissionsPage() {
             placeholder="Buscar por ID o hash..."
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
+            className="w-full pl-9 rounded-[6px] pr-4 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
           />
         </div>
 
         {/* Filtro de estado */}
-        <div className="relative flex items-center p-1 bg-[var(--color-card)] border border-[var(--color-border)]">
+        <div className="rounded-[6px] relative flex items-center p-1 bg-[var(--color-card)] border border-[var(--color-border)]">
           {/* Indicador deslizante */}
           {indicator.width > 0 && (
             <span
@@ -111,7 +111,7 @@ export default function EmissionsPage() {
       </div>
 
       {/* Tabla */}
-      <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+      <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden rounded-[6px]">
         <EmissionsTable
           data={paginated}
           onRowClick={(emission) => router.push(`/dashboard/emissions/${emission.id}`)}

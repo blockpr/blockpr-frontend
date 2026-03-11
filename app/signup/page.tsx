@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { signIn, useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -77,10 +78,19 @@ function formatCuit(value: string): string {
 }
 
 export default function SignupPage() {
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const [googleLoading, setGoogleLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [registered, setRegistered] = useState(false)
+
+  // Redirigir si ya está logueado
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.replace('/dashboard')
+    }
+  }, [status, session, router])
 
   const {
     register,
@@ -115,6 +125,22 @@ export default function SignupPage() {
   async function handleGoogle() {
     setGoogleLoading(true)
     await signIn('google', { callbackUrl: '/dashboard' })
+  }
+
+  // Mostrar loading mientras se verifica la sesión
+  if (status === 'loading') {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="w-6 h-6 border-2 border-[var(--color-border)] border-t-[var(--color-accent)] rounded-full animate-spin" />
+        </div>
+      </AuthLayout>
+    )
+  }
+
+  // No mostrar nada si está redirigiendo
+  if (status === 'authenticated') {
+    return null
   }
 
   if (registered) {

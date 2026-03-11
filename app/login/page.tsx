@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -55,12 +55,20 @@ function GoogleButton({ onClick, loading }: { onClick: () => void; loading: bool
 
 export default function LoginPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [authError, setAuthError] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showResend, setShowResend] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
   const [resendLoading, setResendLoading] = useState(false)
   const [resendSent, setResendSent] = useState(false)
+
+  // Redirigir si ya está logueado
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.replace('/dashboard')
+    }
+  }, [status, session, router])
 
   const {
     register,
@@ -108,6 +116,22 @@ export default function LoginPage() {
   async function handleGoogle() {
     setGoogleLoading(true)
     await signIn('google', { callbackUrl: '/dashboard' })
+  }
+
+  // Mostrar loading mientras se verifica la sesión
+  if (status === 'loading') {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="w-6 h-6 border-2 border-[var(--color-border)] border-t-[var(--color-accent)] rounded-full animate-spin" />
+        </div>
+      </AuthLayout>
+    )
+  }
+
+  // No mostrar nada si está redirigiendo
+  if (status === 'authenticated') {
+    return null
   }
 
   return (

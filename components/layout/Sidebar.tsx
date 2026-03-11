@@ -184,7 +184,7 @@ export function Sidebar() {
                   <path d="M100 104C102.209 104 104 102.209 104 100C104 97.7909 102.209 96 100 96C97.7909 96 96 97.7909 96 100C96 102.209 97.7909 104 100 104Z" fill="currentColor"/>
                 </svg>
                 <span className="font-semibold text-base tracking-tight whitespace-nowrap" style={{ color: logoColor }}>
-                  uniquey
+                  unickeys
                 </span>
               </div>
               <button
@@ -234,7 +234,7 @@ export function Sidebar() {
             <div className="px-2 py-3">
               <button
                 onClick={() => setSettingsSection('perfil')}
-                className="w-full flex items-center gap-3 px-3 py-5 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left"
+                className="w-full flex items-center gap-3 px-3 py-5 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left rounded-[6px]"
               >
                 <UserAvatar name={session?.user?.name} image={session?.user?.image} />
                 <div className="flex-1 min-w-0">

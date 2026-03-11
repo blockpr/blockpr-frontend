@@ -65,7 +65,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Emisiones recientes */}
-      <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+      <div className="border rounded-[6px] border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
 
         <div className="px-6 py-4 flex items-center justify-between border-b border-[var(--color-border)]">
           <div>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/dashboard/emissions"
-            className="text-xs text-black hover:underline"
+            className="text-xs text-[var(--color-text-primary)] hover:underline"
           >
             Ver todas →
           </Link>

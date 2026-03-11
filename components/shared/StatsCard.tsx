@@ -44,7 +44,7 @@ export function StatsCard({
   return (
     <div
       className={cn(
-        'relative border border-[var(--color-border)] bg-[var(--color-card)] p-5 overflow-hidden flex flex-col gap-4',
+        'relative border rounded-[6px] border-[var(--color-border)] bg-[var(--color-card)] p-5 overflow-hidden flex flex-col gap-4',
         className
       )}
     >
