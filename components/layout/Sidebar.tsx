@@ -11,7 +11,7 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 const navItems = [
   {
-    label: 'Dashboard',
+    label: 'Inicio',
     href: '/dashboard',
     exact: true,
     icon: (
