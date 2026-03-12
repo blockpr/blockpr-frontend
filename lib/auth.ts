@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, session }) {
       // Cuando el usuario inicia sesión, guardar los tokens
       if (user) {
         token.id = user.id
@@ -72,30 +72,39 @@ export const authOptions: NextAuthOptions = {
         return token
       }
 
-      // Si se solicita actualizar explícitamente (trigger === 'update'), refrescar el token
-      if (trigger === 'update' && token.refreshToken) {
-        try {
-          const res = await fetch(`${API_URL}/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: token.refreshToken }),
-          })
+      // Si se solicita actualizar explícitamente (trigger === 'update')
+      if (trigger === 'update') {
+        // Sincronizar el nombre del usuario si viene en la sesión actualizada
+        if (session?.user?.name) {
+          token.name = session.user.name
+        }
 
-          if (res.ok) {
-            const data = await res.json()
-            token.accessToken = data.access_token
-            token.refreshToken = data.refresh_token
-            return token
-          } else {
-            // Si el refresh falla, limpiar los tokens para forzar re-login
+        // Refrescar el token de acceso si hay refreshToken disponible
+        if (token.refreshToken) {
+          try {
+            const res = await fetch(`${API_URL}/auth/refresh`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh_token: token.refreshToken }),
+            })
+
+            if (res.ok) {
+              const data = await res.json()
+              token.accessToken = data.access_token
+              token.refreshToken = data.refresh_token
+            } else {
+              // Si el refresh falla, limpiar los tokens para forzar re-login
+              token.accessToken = undefined
+              token.refreshToken = undefined
+            }
+          } catch (error) {
+            // Si hay un error, limpiar los tokens
             token.accessToken = undefined
             token.refreshToken = undefined
           }
-        } catch (error) {
-          // Si hay un error, limpiar los tokens
-          token.accessToken = undefined
-          token.refreshToken = undefined
         }
+
+        return token
       }
 
       return token
