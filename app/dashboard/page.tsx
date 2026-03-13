@@ -1,20 +1,116 @@
+'use client'
+
 import Link from 'next/link'
+import { useCallback } from 'react'
+import { getSession, useSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
 import { StatsCard } from '@/components/shared/StatsCard'
 import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
-import { MOCK_EMISSIONS } from '@/lib/mocks/emissions'
+import { certificatesApi, refreshSession } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
+import type { Emission, EmissionStatus } from '@/types'
 
-const stats = {
-  total: 1847,
-  verified: 1823,
-  pending: 18,
-  failed: 6,
+const INITIAL_STATS = {
+  total: 0,
+  verified: 0,
+  pending: 0,
+  failed: 0,
 }
 
-const recent = MOCK_EMISSIONS.slice(0, 5)
+function mapBackendStatusToEmissionStatus(status: string | null): EmissionStatus {
+  if (status === 'confirmed') return 'verified'
+  if (status === 'failed' || status === 'error' || status === 'rejected') return 'failed'
+  return 'pending'
+}
+
+function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certificatesApi.list>>['data'][number]): Emission {
+  return {
+    id: certificate.id,
+    date: certificate.created_at,
+    hash: certificate.document_hash,
+    status: mapBackendStatusToEmissionStatus(certificate.blockchain.status),
+    txHash: certificate.blockchain.transaction_signature ?? undefined,
+    verifyUrl: certificate.blockchain.explorer_url ?? `/verify/${certificate.id}`,
+  }
+}
 
 export default function DashboardPage() {
+  const { status, update } = useSession()
+
+  const fetchDashboardData = useCallback(async (): Promise<{ recent: Emission[]; stats: typeof INITIAL_STATS }> => {
+    let currentSession = await getSession()
+
+    if (!currentSession?.user?.accessToken) {
+      throw new Error('No hay sesión activa')
+    }
+
+    const loadData = async (accessToken: string) => {
+      const firstPage = await certificatesApi.list(accessToken, 1, 100)
+
+      let allCertificates = [...firstPage.data]
+      if (firstPage.pagination.pages > 1) {
+        const remainingPageCalls = Array.from(
+          { length: firstPage.pagination.pages - 1 },
+          (_, i) => certificatesApi.list(accessToken, i + 2, 100)
+        )
+        const remainingResponses = await Promise.all(remainingPageCalls)
+        for (const pageData of remainingResponses) {
+          allCertificates = allCertificates.concat(pageData.data)
+        }
+      }
+
+      const allEmissions = allCertificates.map(mapCertificateToEmission)
+      const stats = allEmissions.reduce(
+        (acc, emission) => {
+          acc.total += 1
+          if (emission.status === 'verified') acc.verified += 1
+          if (emission.status === 'pending') acc.pending += 1
+          if (emission.status === 'failed') acc.failed += 1
+          return acc
+        },
+        { ...INITIAL_STATS }
+      )
+
+      return {
+        stats,
+        recent: allEmissions.slice(0, 5),
+      }
+    }
+
+    try {
+      return await loadData(currentSession.user.accessToken)
+    } catch (error: any) {
+      if (error?.status === 401) {
+        await update()
+        await refreshSession()
+        currentSession = await getSession()
+
+        if (!currentSession?.user?.accessToken) {
+          throw new Error('Sesión expirada. Iniciá sesión nuevamente.')
+        }
+
+        return await loadData(currentSession.user.accessToken)
+      }
+
+      throw error
+    }
+  }, [update])
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['dashboard-emissions-overview'],
+    queryFn: fetchDashboardData,
+    enabled: status === 'authenticated',
+  })
+
+  const stats = data?.stats ?? INITIAL_STATS
+  const recent = data?.recent ?? []
+
   return (
     <div className="p-8 space-y-8 bg-[var(--color-base)] min-h-full">
       {/* Stats + tabla agrupados con mismo gap */}
@@ -24,7 +120,6 @@ export default function DashboardPage() {
           label="Total emitidos"
           value={stats.total}
           accent="default"
-          trend={{ value: '247', positive: true }}
           icon={
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -35,7 +130,6 @@ export default function DashboardPage() {
           label="Verificados"
           value={stats.verified}
           accent="success"
-          trend={{ value: '245', positive: true }}
           icon={
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -98,7 +192,31 @@ export default function DashboardPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
-            {recent.map((emission) => (
+            {isLoading && (
+              <tr>
+                <td colSpan={5} className="px-6 py-6 text-center text-sm text-[var(--color-text-secondary)]">
+                  Cargando emisiones recientes...
+                </td>
+              </tr>
+            )}
+
+            {isError && (
+              <tr>
+                <td colSpan={5} className="px-6 py-6 text-center text-sm text-[var(--color-text-secondary)]">
+                  {(error as { message?: string })?.message ?? 'No se pudieron cargar las emisiones recientes'}
+                </td>
+              </tr>
+            )}
+
+            {!isLoading && !isError && recent.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-6 text-center text-sm text-[var(--color-text-secondary)]">
+                  No hay emisiones recientes.
+                </td>
+              </tr>
+            )}
+
+            {!isLoading && !isError && recent.map((emission) => (
               <tr
                 key={emission.id}
                 className="hover:bg-[var(--color-card-hover)] transition-colors"

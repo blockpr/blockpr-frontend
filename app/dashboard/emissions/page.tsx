@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession, getSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
 import { EmissionsTable } from '@/components/emissions/EmissionsTable'
-import { MOCK_EMISSIONS } from '@/lib/mocks/emissions'
+import { certificatesApi, refreshSession } from '@/lib/api'
 import type { EmissionStatus, Emission } from '@/types'
 
 const PAGE_SIZE = 10
+const CERTIFICATES_LIMIT = 100
 
 const STATUS_OPTIONS: { label: string; value: EmissionStatus | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -15,20 +18,70 @@ const STATUS_OPTIONS: { label: string; value: EmissionStatus | 'all' }[] = [
   { label: 'Fallidos', value: 'failed' },
 ]
 
-// Duplicamos los mocks para simular más datos
-const ALL_EMISSIONS: Emission[] = [
-  ...MOCK_EMISSIONS,
-  ...MOCK_EMISSIONS.map((e) => ({ ...e, id: e.id + '_b' })),
-  ...MOCK_EMISSIONS.map((e) => ({ ...e, id: e.id + '_c' })),
-]
+function mapBackendStatusToEmissionStatus(status: string | null): EmissionStatus {
+  if (status === 'confirmed') return 'verified'
+  if (status === 'failed' || status === 'error' || status === 'rejected') return 'failed'
+  return 'pending'
+}
+
+function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certificatesApi.list>>['data'][number]): Emission {
+  return {
+    id: certificate.id,
+    date: certificate.created_at,
+    hash: certificate.document_hash,
+    status: mapBackendStatusToEmissionStatus(certificate.blockchain.status),
+    txHash: certificate.blockchain.transaction_signature ?? undefined,
+    verifyUrl: certificate.blockchain.explorer_url ?? `/verify/${certificate.id}`,
+  }
+}
 
 export default function EmissionsPage() {
   const router = useRouter()
+  const { status, update } = useSession()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmissionStatus | 'all'>('all')
   const [page, setPage] = useState(1)
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+
+  const fetchCertificates = useCallback(async (): Promise<Emission[]> => {
+    let currentSession = await getSession()
+
+    if (!currentSession?.user?.accessToken) {
+      throw new Error('No hay sesión activa')
+    }
+
+    try {
+      const response = await certificatesApi.list(currentSession.user.accessToken, 1, CERTIFICATES_LIMIT)
+      return response.data.map(mapCertificateToEmission)
+    } catch (error: any) {
+      if (error?.status === 401) {
+        await update()
+        await refreshSession()
+        currentSession = await getSession()
+        if (!currentSession?.user?.accessToken) {
+          throw new Error('Sesión expirada. Iniciá sesión nuevamente.')
+        }
+
+        const retry = await certificatesApi.list(currentSession.user.accessToken, 1, CERTIFICATES_LIMIT)
+        return retry.data.map(mapCertificateToEmission)
+      }
+
+      throw error
+    }
+  }, [update])
+
+  const {
+    data: allEmissions = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['dashboard-emissions'],
+    queryFn: fetchCertificates,
+    enabled: status === 'authenticated',
+  })
 
   useLayoutEffect(() => {
     const activeIndex = STATUS_OPTIONS.findIndex(o => o.value === statusFilter)
@@ -36,8 +89,19 @@ export default function EmissionsPage() {
     if (btn) setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth })
   }, [statusFilter])
 
+  useEffect(() => {
+    function handleResize() {
+      const activeIndex = STATUS_OPTIONS.findIndex((o) => o.value === statusFilter)
+      const btn = btnRefs.current[activeIndex]
+      if (btn) setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth })
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [statusFilter])
+
   const filtered = useMemo(() => {
-    return ALL_EMISSIONS.filter((e) => {
+    return allEmissions.filter((e) => {
       const matchesStatus = statusFilter === 'all' || e.status === statusFilter
       const matchesSearch =
         search === '' ||
@@ -45,10 +109,19 @@ export default function EmissionsPage() {
         e.hash.toLowerCase().includes(search.toLowerCase())
       return matchesStatus && matchesSearch
     })
-  }, [search, statusFilter])
+  }, [allEmissions, search, statusFilter])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages)
+    }
+    if (totalPages === 0 && page !== 1) {
+      setPage(1)
+    }
+  }, [page, totalPages])
 
   function handleSearch(value: string) {
     setSearch(value)
@@ -112,13 +185,31 @@ export default function EmissionsPage() {
 
       {/* Tabla */}
       <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden rounded-[6px]">
-        <EmissionsTable
-          data={paginated}
-          onRowClick={(emission) => router.push(`/dashboard/emissions/${emission.id}`)}
-        />
+        {isLoading ? (
+          <div className="px-6 py-16 text-center">
+            <p className="text-sm text-[var(--color-text-secondary)]">Cargando emisiones...</p>
+          </div>
+        ) : isError ? (
+          <div className="px-6 py-16 text-center space-y-3">
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {(error as { message?: string })?.message ?? 'No se pudieron cargar las emisiones'}
+            </p>
+            <button
+              onClick={() => void refetch()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <EmissionsTable
+            data={paginated}
+            onRowClick={(emission) => router.push(`/dashboard/emissions/${emission.id}`)}
+          />
+        )}
 
         {/* Paginación */}
-        {totalPages > 1 && (
+        {!isLoading && !isError && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-[var(--color-border)] flex items-center justify-between">
             <p className="text-xs text-[var(--color-text-muted)]">
               Página {page} de {totalPages}

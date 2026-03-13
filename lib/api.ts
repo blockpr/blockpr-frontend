@@ -155,3 +155,37 @@ export const apiKeysApi = {
       headers: { Authorization: `Bearer ${access_token}` },
     }),
 }
+
+export interface CertificatesListItem {
+  id: string
+  external_id: string | null
+  certificate_type: string | null
+  document_hash: string
+  created_at: string
+  blockchain: {
+    transaction_signature: string | null
+    explorer_url: string | null
+    blockchain: string | null
+    network: string | null
+    status: string | null
+    confirmed_at: string | null
+  }
+}
+
+export interface CertificatesListResponse {
+  success: boolean
+  data: CertificatesListItem[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
+}
+
+export const certificatesApi = {
+  list: (access_token: string, page = 1, limit = 100) =>
+    apiFetch<CertificatesListResponse>(`/certificates?page=${page}&limit=${limit}`, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    }),
+}
