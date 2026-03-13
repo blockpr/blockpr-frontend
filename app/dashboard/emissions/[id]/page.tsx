@@ -1,13 +1,39 @@
+'use client'
+
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { useCallback } from 'react'
+import { useParams } from 'next/navigation'
+import { getSession, useSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
 import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
 import { BlockchainTxLink } from '@/components/shared/BlockchainTxLink'
-import { MOCK_EMISSIONS } from '@/lib/mocks/emissions'
+import { certificatesApi, refreshSession } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
+import type { Emission, EmissionStatus } from '@/types'
 
-interface Props {
-  params: { id: string }
+const CERTIFICATES_LIMIT = 100
+
+function mapBackendStatusToEmissionStatus(status: string | null): EmissionStatus {
+  if (status === 'confirmed') return 'verified'
+  if (status === 'failed' || status === 'error' || status === 'rejected') return 'failed'
+  return 'pending'
+}
+
+function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certificatesApi.list>>['data'][number]): Emission {
+  return {
+    id: certificate.id,
+    date: certificate.created_at,
+    hash: certificate.document_hash,
+    status: mapBackendStatusToEmissionStatus(certificate.blockchain.status),
+    documentName: certificate.external_id ?? certificate.certificate_type ?? 'Sin nombre',
+    documentType: certificate.certificate_type ?? 'sin_tipo',
+    txHash: certificate.blockchain.transaction_signature ?? undefined,
+    verifyUrl: certificate.blockchain.explorer_url ?? `/verify/${certificate.id}`,
+    blockchainName: certificate.blockchain.blockchain ?? undefined,
+    blockchainNetwork: certificate.blockchain.network ?? undefined,
+    blockchainConfirmedAt: certificate.blockchain.confirmed_at ?? undefined,
+  }
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -19,9 +45,97 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
   )
 }
 
-export default function EmissionDetailPage({ params }: Props) {
-  const emission = MOCK_EMISSIONS.find((e) => e.id === params.id)
-  if (!emission) notFound()
+export default function EmissionDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const { status, update } = useSession()
+
+  const fetchEmission = useCallback(async (): Promise<Emission | null> => {
+    let currentSession = await getSession()
+
+    if (!currentSession?.user?.accessToken) {
+      throw new Error('No hay sesion activa')
+    }
+
+    async function fetchAll(accessToken: string) {
+      const firstPage = await certificatesApi.list(accessToken, 1, CERTIFICATES_LIMIT)
+      let allCertificates = [...firstPage.data]
+
+      if (firstPage.pagination.pages > 1) {
+        const remainingPageCalls = Array.from(
+          { length: firstPage.pagination.pages - 1 },
+          (_, i) => certificatesApi.list(accessToken, i + 2, CERTIFICATES_LIMIT)
+        )
+        const remainingResponses = await Promise.all(remainingPageCalls)
+        for (const response of remainingResponses) {
+          allCertificates = allCertificates.concat(response.data)
+        }
+      }
+
+      const emission = allCertificates.map(mapCertificateToEmission).find((item) => item.id === id)
+      return emission ?? null
+    }
+
+    try {
+      return await fetchAll(currentSession.user.accessToken)
+    } catch (error: any) {
+      if (error?.status === 401) {
+        await update()
+        await refreshSession()
+        currentSession = await getSession()
+
+        if (!currentSession?.user?.accessToken) {
+          throw new Error('Sesion expirada. Inicia sesion nuevamente.')
+        }
+
+        return await fetchAll(currentSession.user.accessToken)
+      }
+
+      throw error
+    }
+  }, [id, update])
+
+  const {
+    data: emission,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['dashboard-emission-detail', id],
+    queryFn: fetchEmission,
+    enabled: status === 'authenticated' && !!id,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <p className="text-sm text-[var(--color-text-secondary)]">Cargando detalle de emision...</p>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8 space-y-3">
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          {(error as { message?: string })?.message ?? 'No se pudo cargar la emision'}
+        </p>
+        <Link href="/dashboard/emissions" className="text-sm text-[var(--color-accent)] hover:underline">
+          Volver a emisiones
+        </Link>
+      </div>
+    )
+  }
+
+  if (!emission) {
+    return (
+      <div className="p-8 space-y-3">
+        <p className="text-sm text-[var(--color-text-secondary)]">No se encontro esta emision.</p>
+        <Link href="/dashboard/emissions" className="text-sm text-[var(--color-accent)] hover:underline">
+          Volver a emisiones
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8 space-y-6 max-w-4xl bg-[var(--color-base)] min-h-full">
@@ -35,86 +149,62 @@ export default function EmissionDetailPage({ params }: Props) {
         Emisiones
       </Link>
 
-      {/* Datos principales */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">
-            Información del certificado
-          </h2>
+          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">Informacion del certificado</h2>
         </div>
         <dl className="px-6">
-          <DetailRow label="ID de emisión">
+          <DetailRow label="ID de emision">
             <span className="font-mono text-xs">{emission.id}</span>
           </DetailRow>
-          <DetailRow label="Fecha de registro">
-            {formatDate(emission.date)}
-          </DetailRow>
-          <DetailRow label="Empresa emisora">
-            {emission.company ?? '—'}
-          </DetailRow>
+          <DetailRow label="Nombre del documento">{emission.documentName ?? 'Sin nombre'}</DetailRow>
+          <DetailRow label="Tipo de documento">{emission.documentType ?? '-'}</DetailRow>
+          <DetailRow label="Fecha de registro">{formatDate(emission.date)}</DetailRow>
           <DetailRow label="Estado">
             <EmissionStatusBadge status={emission.status} />
           </DetailRow>
         </dl>
       </div>
 
-      {/* Datos criptográficos */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">
-            Respaldo criptográfico
-          </h2>
+          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">Respaldo criptografico</h2>
         </div>
         <dl className="px-6">
           <DetailRow label="Hash SHA-256">
             <div className="space-y-1.5">
               <HashDisplay hash={emission.hash} />
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Huella digital única del certificado
-              </p>
+              <p className="text-xs text-[var(--color-text-muted)]">Huella digital unica del certificado</p>
             </div>
           </DetailRow>
-          <DetailRow label="Transacción blockchain">
+          <DetailRow label="Transaccion blockchain">
             {emission.txHash ? (
               <div className="space-y-1.5">
                 <BlockchainTxLink txHash={emission.txHash} network="solana" />
-                <p className="text-xs text-[var(--color-text-muted)]">Registrado en Solana</p>
+                <p className="text-xs text-[var(--color-text-muted)]">Registrado en {emission.blockchainName ?? 'blockchain'}</p>
               </div>
             ) : (
               <span className="text-[var(--color-text-muted)]">
-                {emission.status === 'pending' ? 'En proceso de registro...' : 'No disponible'}
+                {emission.status === 'pending' ? 'Pendiente de confirmacion en blockchain' : 'No disponible'}
               </span>
             )}
           </DetailRow>
-          {emission.blockNumber && (
-            <DetailRow label="Bloque">
-              <span className="font-mono text-xs">#{emission.blockNumber.toLocaleString('es-AR')}</span>
-            </DetailRow>
-          )}
-          {emission.merkleProof && (
-            <DetailRow label="Merkle proof">
-              <div className="space-y-1">
-                {emission.merkleProof.map((p, i) => (
-                  <HashDisplay key={i} hash={p} truncate className="block" />
-                ))}
-              </div>
+          {emission.blockchainConfirmedAt && (
+            <DetailRow label="Confirmado en">
+              {formatDate(emission.blockchainConfirmedAt)}
             </DetailRow>
           )}
         </dl>
       </div>
 
-      {/* Verificación pública */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">
-            Verificación pública
-          </h2>
+          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">Verificacion publica</h2>
         </div>
         <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
             <p className="text-sm text-[var(--color-text-secondary)]">
-              Cualquier persona puede verificar la autenticidad de este certificado sin necesidad de
-              crear una cuenta.
+              Cualquier persona puede verificar la autenticidad de este certificado sin necesidad de crear una cuenta.
             </p>
             <a
               href={emission.verifyUrl}
@@ -132,53 +222,16 @@ export default function EmissionDetailPage({ params }: Props) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
               Abrir
             </a>
             <button
               onClick={() => navigator.clipboard.writeText(emission.verifyUrl)}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-sm text-white hover:bg-[var(--color-accent-hover)] transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.187c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
-              </svg>
               Copiar link
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Descarga */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-6 py-5 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-[var(--color-text-primary)]">
-            Descargar información
-          </p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Exportá los datos completos de esta emisión en formato JSON
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            const blob = new Blob([JSON.stringify(emission, null, 2)], {
-              type: 'application/json',
-            })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `${emission.id}.json`
-            a.click()
-            URL.revokeObjectURL(url)
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors shrink-0"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Descargar JSON
-        </button>
       </div>
     </div>
   )

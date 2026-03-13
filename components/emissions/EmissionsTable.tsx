@@ -33,7 +33,7 @@ export function EmissionsTable({ data, onRowClick }: EmissionsTableProps) {
       <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--color-border)]">
-            {['ID', 'Fecha', 'Hash', 'Estado', 'Verificación', ''].map((col) => (
+            {['ID', 'Documento', 'Fecha', 'Hash', 'Estado', 'Verificación', ''].map((col) => (
               <th
                 key={col}
                 className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider whitespace-nowrap"
@@ -53,6 +53,11 @@ export function EmissionsTable({ data, onRowClick }: EmissionsTableProps) {
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className="font-mono text-xs text-[var(--color-text-secondary)]">
                   {emission.id}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className="text-sm text-[var(--color-text-secondary)]">
+                  {emission.documentName ?? 'Sin nombre'}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">

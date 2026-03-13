@@ -5,8 +5,13 @@ export interface Emission {
   date: string
   hash: string
   status: EmissionStatus
+  documentName?: string
+  documentType?: string
   txHash?: string
   verifyUrl: string
+  blockchainNetwork?: string
+  blockchainName?: string
+  blockchainConfirmedAt?: string
   company?: string
   merkleProof?: string[]
   blockNumber?: number
