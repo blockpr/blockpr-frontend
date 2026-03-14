@@ -4,23 +4,19 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string
-      name?: string | null   // company_name
+      name?: string | null
       email?: string | null
       image?: string | null
-      accessToken?: string
     }
   }
 
   interface User {
-    accessToken?: string
-    refreshToken?: string
+    id: string
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     id?: string
-    accessToken?: string
-    refreshToken?: string
   }
 }

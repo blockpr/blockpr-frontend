@@ -1,42 +1,15 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { authApi } from '@/lib/api'
+import { redirect } from 'next/navigation'
+import { serverFetch } from '@/lib/server-api'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { DashboardShell } from '@/components/layout/DashboardShell'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
+import type { MeResponse } from '@/lib/api'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-
-  // Verificar sesión al montar
-  useEffect(() => {
-    async function checkSession() {
-      try {
-        await authApi.me()
-        setIsAuthenticated(true)
-      } catch {
-        setIsAuthenticated(false)
-        router.replace('/login')
-      }
-    }
-    checkSession()
-  }, [router])
-
-  // Mostrar loading mientras se verifica la sesión
-  if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen bg-[var(--color-base)] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[var(--color-border)] border-t-[var(--color-accent)] rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  // No mostrar nada si no está autenticado (está redirigiendo)
-  if (!isAuthenticated) {
-    return null
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  try {
+    await serverFetch<MeResponse>('/auth/me')
+  } catch {
+    redirect('/login')
   }
 
   return (

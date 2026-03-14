@@ -3,12 +3,11 @@
 import Link from 'next/link'
 import { useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { getSession, useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
 import { BlockchainTxLink } from '@/components/shared/BlockchainTxLink'
-import { certificatesApi, refreshSession } from '@/lib/api'
+import { certificatesApi } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import type { Emission, EmissionStatus } from '@/types'
 
@@ -47,52 +46,25 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
 
 export default function EmissionDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { status, update } = useSession()
 
   const fetchEmission = useCallback(async (): Promise<Emission | null> => {
-    let currentSession = await getSession()
+    const firstPage = await certificatesApi.list(1, CERTIFICATES_LIMIT)
+    let allCertificates = [...firstPage.data]
 
-    if (!currentSession?.user?.accessToken) {
-      throw new Error('No hay sesion activa')
-    }
-
-    async function fetchAll(accessToken: string) {
-      const firstPage = await certificatesApi.list(accessToken, 1, CERTIFICATES_LIMIT)
-      let allCertificates = [...firstPage.data]
-
-      if (firstPage.pagination.pages > 1) {
-        const remainingPageCalls = Array.from(
-          { length: firstPage.pagination.pages - 1 },
-          (_, i) => certificatesApi.list(accessToken, i + 2, CERTIFICATES_LIMIT)
-        )
-        const remainingResponses = await Promise.all(remainingPageCalls)
-        for (const response of remainingResponses) {
-          allCertificates = allCertificates.concat(response.data)
-        }
+    if (firstPage.pagination.pages > 1) {
+      const remainingPageCalls = Array.from(
+        { length: firstPage.pagination.pages - 1 },
+        (_, i) => certificatesApi.list(i + 2, CERTIFICATES_LIMIT)
+      )
+      const remainingResponses = await Promise.all(remainingPageCalls)
+      for (const response of remainingResponses) {
+        allCertificates = allCertificates.concat(response.data)
       }
-
-      const emission = allCertificates.map(mapCertificateToEmission).find((item) => item.id === id)
-      return emission ?? null
     }
 
-    try {
-      return await fetchAll(currentSession.user.accessToken)
-    } catch (error: any) {
-      if (error?.status === 401) {
-        await update()
-        await refreshSession()
-        currentSession = await getSession()
-
-        if (!currentSession?.user?.accessToken) {
-          throw new Error('Sesion expirada. Inicia sesion nuevamente.')
-        }
-
-        return await fetchAll(currentSession.user.accessToken)
-      }
-
-      throw error
-    }
-  }, [id, update])
+    const emission = allCertificates.map(mapCertificateToEmission).find((item) => item.id === id)
+    return emission ?? null
+  }, [id])
 
   const {
     data: emission,
@@ -102,13 +74,88 @@ export default function EmissionDetailPage() {
   } = useQuery({
     queryKey: ['dashboard-emission-detail', id],
     queryFn: fetchEmission,
-    enabled: status === 'authenticated' && !!id,
+    enabled: !!id,
   })
 
   if (isLoading) {
+    const sk = 'rounded-lg bg-[var(--color-border)] animate-pulse'
     return (
-      <div className="p-8">
-        <p className="text-sm text-[var(--color-text-secondary)]">Cargando detalle de emision...</p>
+      <div className="p-8 space-y-6 max-w-4xl bg-[var(--color-base)] min-h-full">
+        {/* Back link skeleton */}
+        <div className={`h-4 w-24 ${sk}`} />
+
+        {/* Card 1 — Información del certificado */}
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--color-border)]">
+            <div className={`h-3.5 w-44 ${sk}`} />
+          </div>
+          <div className="px-6 divide-y divide-[var(--color-border)]">
+            {/* ID */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className={`h-3.5 w-48 ${sk}`} />
+            </div>
+            {/* Nombre */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className={`h-3.5 w-36 ${sk}`} />
+            </div>
+            {/* Tipo */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className={`h-3.5 w-24 ${sk}`} />
+            </div>
+            {/* Fecha */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className={`h-3.5 w-28 ${sk}`} />
+            </div>
+            {/* Estado */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className={`h-5 w-20 rounded-full ${sk}`} />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2 — Respaldo criptográfico */}
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--color-border)]">
+            <div className={`h-3.5 w-40 ${sk}`} />
+          </div>
+          <div className="px-6 divide-y divide-[var(--color-border)]">
+            {/* Hash */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className="flex-1 space-y-2">
+                <div className={`h-3.5 w-full max-w-sm ${sk}`} />
+                <div className={`h-3 w-40 ${sk}`} />
+              </div>
+            </div>
+            {/* TX */}
+            <div className="flex gap-4 py-4">
+              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
+              <div className={`h-3.5 w-52 ${sk}`} />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3 — Verificación pública */}
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--color-border)]">
+            <div className={`h-3.5 w-36 ${sk}`} />
+          </div>
+          <div className="px-6 py-5 flex items-center gap-4">
+            <div className="flex-1 space-y-2">
+              <div className={`h-3.5 w-full max-w-xs ${sk}`} />
+              <div className={`h-3 w-48 ${sk}`} />
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <div className={`h-9 w-20 rounded-lg ${sk}`} />
+              <div className={`h-9 w-28 rounded-lg ${sk}`} />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

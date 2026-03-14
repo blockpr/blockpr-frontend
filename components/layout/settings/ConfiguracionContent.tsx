@@ -60,8 +60,10 @@ export default function ConfiguracionContent() {
           </div>
         </div>
   
+
+        {/* TODO: notificaciones — descomentar cuando el backend soporte preferencias
         <div className="h-px bg-[var(--color-border)]" />
-  
+
         <div className="space-y-4">
           {[
             { label: 'Notificaciones por email', description: 'Recibir alertas de emisiones y verificaciones' },
@@ -79,17 +81,8 @@ export default function ConfiguracionContent() {
             </div>
           ))}
         </div>
+        */}
   
-        <div className="h-px bg-[var(--color-border)]" />
-  
-        <div>
-          <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-3">Zona horaria</p>
-          <select className="w-full px-3 py-2 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors">
-            <option>America/Argentina/Buenos_Aires (UTC-3)</option>
-            <option>America/New_York (UTC-5)</option>
-            <option>Europe/Madrid (UTC+1)</option>
-          </select>
-        </div>
       </div>
     )
   }
