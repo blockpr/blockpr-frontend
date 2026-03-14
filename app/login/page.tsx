@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signIn, useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -55,20 +54,27 @@ function GoogleButton({ onClick, loading }: { onClick: () => void; loading: bool
 
 export default function LoginPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
   const [authError, setAuthError] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showResend, setShowResend] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
   const [resendLoading, setResendLoading] = useState(false)
   const [resendSent, setResendSent] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
 
-  // Redirigir si ya está logueado
+  // Verificar si ya está logueado
   useEffect(() => {
-    if (status === 'authenticated' && session) {
-      router.replace('/dashboard')
+    async function checkSession() {
+      try {
+        await authApi.me()
+        router.replace('/dashboard')
+      } catch {
+        // No hay sesión activa
+        setCheckingSession(false)
+      }
     }
-  }, [status, session, router])
+    checkSession()
+  }, [router])
 
   const {
     register,
@@ -80,25 +86,20 @@ export default function LoginPage() {
     setAuthError(null)
     setShowResend(false)
     setResendSent(false)
-    const result = await signIn('credentials', {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    })
-
-    if (result?.error) {
-      if (result.error === 'EmailNotVerified') {
+    
+    try {
+      await authApi.login(data.email, data.password)
+      router.push('/dashboard')
+      router.refresh()
+    } catch (error: any) {
+      if (error?.status === 403) {
         setAuthError('Debés verificar tu email antes de iniciar sesión.')
         setResendEmail(data.email)
         setShowResend(true)
       } else {
-        setAuthError('Email o contraseña incorrectos')
+        setAuthError(error?.message || 'Email o contraseña incorrectos')
       }
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   async function handleResend() {
@@ -115,11 +116,12 @@ export default function LoginPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true)
-    await signIn('google', { callbackUrl: '/dashboard' })
+    // TODO: Implementar Google OAuth si es necesario
+    setGoogleLoading(false)
   }
 
   // Mostrar loading mientras se verifica la sesión
-  if (status === 'loading') {
+  if (checkingSession) {
     return (
       <AuthLayout>
         <div className="flex items-center justify-center py-12">
@@ -127,11 +129,6 @@ export default function LoginPage() {
         </div>
       </AuthLayout>
     )
-  }
-
-  // No mostrar nada si está redirigiendo
-  if (status === 'authenticated') {
-    return null
   }
 
   return (

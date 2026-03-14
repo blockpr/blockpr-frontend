@@ -11,6 +11,51 @@ interface EmissionsTableProps {
   onRowClick?: (emission: Emission) => void
 }
 
+export function EmissionsTableSkeleton() {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-[var(--color-border)]">
+            {['Documento', 'Fecha', 'Hash', 'Estado', 'Verificación', ''].map((col) => (
+              <th
+                key={col}
+                className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider whitespace-nowrap"
+              >
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[var(--color-border)]">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <tr key={i} className="hover:bg-[var(--color-card-hover)] transition-colors">
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="h-4 w-32 bg-[var(--color-border)] rounded animate-pulse" />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="h-4 w-24 bg-[var(--color-border)] rounded animate-pulse" />
+              </td>
+              <td className="px-6 py-4">
+                <div className="h-5 w-32 bg-[var(--color-border)] rounded animate-pulse" />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="h-5 w-20 bg-[var(--color-border)] rounded-full animate-pulse" />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="h-4 w-16 bg-[var(--color-border)] rounded animate-pulse" />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                <div className="h-4 w-20 bg-[var(--color-border)] rounded animate-pulse ml-auto" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export function EmissionsTable({ data, onRowClick }: EmissionsTableProps) {
   if (data.length === 0) {
     return (
@@ -33,7 +78,7 @@ export function EmissionsTable({ data, onRowClick }: EmissionsTableProps) {
       <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--color-border)]">
-            {['ID', 'Documento', 'Fecha', 'Hash', 'Estado', 'Verificación', ''].map((col) => (
+            {['Documento', 'Fecha', 'Hash', 'Estado', 'Verificación', ''].map((col) => (
               <th
                 key={col}
                 className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider whitespace-nowrap"
@@ -50,11 +95,6 @@ export function EmissionsTable({ data, onRowClick }: EmissionsTableProps) {
               onClick={() => onRowClick?.(emission)}
               className="hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer group"
             >
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className="font-mono text-xs text-[var(--color-text-secondary)]">
-                  {emission.id}
-                </span>
-              </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className="text-sm text-[var(--color-text-secondary)]">
                   {emission.documentName ?? 'Sin nombre'}

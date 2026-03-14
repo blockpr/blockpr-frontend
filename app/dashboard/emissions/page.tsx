@@ -2,10 +2,9 @@
 
 import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession, getSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
-import { EmissionsTable } from '@/components/emissions/EmissionsTable'
-import { certificatesApi, refreshSession } from '@/lib/api'
+import { EmissionsTable, EmissionsTableSkeleton } from '@/components/emissions/EmissionsTable'
+import { certificatesApi } from '@/lib/api'
 import type { EmissionStatus, Emission } from '@/types'
 
 const PAGE_SIZE = 10
@@ -42,42 +41,18 @@ function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certifi
 
 export default function EmissionsPage() {
   const router = useRouter()
-  const { status, update } = useSession()
   const [search, setSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<EmissionStatus | 'all'>('all')
   const [page, setPage] = useState(1)
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
 
   const fetchCertificates = useCallback(async (): Promise<Emission[]> => {
-    let currentSession = await getSession()
-
-    if (!currentSession?.user?.accessToken) {
-      throw new Error('No hay sesión activa')
-    }
-
-    try {
-      const response = await certificatesApi.list(currentSession.user.accessToken, 1, CERTIFICATES_LIMIT)
-      return response.data.map(mapCertificateToEmission)
-    } catch (error: any) {
-      if (error?.status === 401) {
-        await update()
-        await refreshSession()
-        currentSession = await getSession()
-        if (!currentSession?.user?.accessToken) {
-          throw new Error('Sesión expirada. Iniciá sesión nuevamente.')
-        }
-
-        const retry = await certificatesApi.list(currentSession.user.accessToken, 1, CERTIFICATES_LIMIT)
-        return retry.data.map(mapCertificateToEmission)
-      }
-
-      throw error
-    }
-  }, [update])
+    const response = await certificatesApi.list(1, CERTIFICATES_LIMIT)
+    return response.data.map(mapCertificateToEmission)
+  }, [])
 
   const {
     data: allEmissions = [],
@@ -88,16 +63,8 @@ export default function EmissionsPage() {
   } = useQuery({
     queryKey: ['dashboard-emissions'],
     queryFn: fetchCertificates,
-    enabled: status === 'authenticated',
   })
 
-  const documentTypeOptions = useMemo(() => {
-    const options = new Set<string>()
-    for (const emission of allEmissions) {
-      if (emission.documentType) options.add(emission.documentType)
-    }
-    return ['all', ...Array.from(options)]
-  }, [allEmissions])
 
   useLayoutEffect(() => {
     const activeIndex = STATUS_OPTIONS.findIndex((o) => o.value === statusFilter)
@@ -119,7 +86,6 @@ export default function EmissionsPage() {
   const filtered = useMemo(() => {
     return allEmissions.filter((e) => {
       const matchesStatus = statusFilter === 'all' || e.status === statusFilter
-      const matchesType = typeFilter === 'all' || e.documentType === typeFilter
       const matchesSearch =
         search === '' ||
         e.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -131,9 +97,9 @@ export default function EmissionsPage() {
       const matchesDateFrom = fromTime === null || emissionTime >= fromTime
       const matchesDateTo = toTime === null || emissionTime <= toTime
 
-      return matchesStatus && matchesType && matchesSearch && matchesDateFrom && matchesDateTo
+      return matchesStatus && matchesSearch && matchesDateFrom && matchesDateTo
     })
-  }, [allEmissions, search, statusFilter, typeFilter, dateFrom, dateTo])
+  }, [allEmissions, search, statusFilter, dateFrom, dateTo])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -157,34 +123,30 @@ export default function EmissionsPage() {
     setPage(1)
   }
 
-  function handleTypeFilter(value: string) {
-    setTypeFilter(value)
-    setPage(1)
-  }
 
   return (
     <div className="p-8 space-y-6 bg-[var(--color-base)] min-h-full">
       <div className="flex flex-col gap-3">
-        <div className="relative w-full sm:max-w-sm">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Buscar por ID o hash..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 rounded-[6px] pr-4 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
-          />
-        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 sm:max-w-sm">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar por ID o hash..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-9 rounded-[6px] pr-4 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
+            />
+          </div>
 
-        <div className="flex flex-col lg:flex-row gap-3">
           <div className="flex items-center gap-2">
             <label className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">Desde</label>
             <input
@@ -209,21 +171,6 @@ export default function EmissionsPage() {
               }}
               className="rounded-[6px] px-3 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">Tipo</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => handleTypeFilter(e.target.value)}
-              className="rounded-[6px] px-3 py-2 text-sm bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
-            >
-              {documentTypeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt === 'all' ? 'Todos los tipos' : opt}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -255,9 +202,7 @@ export default function EmissionsPage() {
 
       <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden rounded-[6px]">
         {isLoading ? (
-          <div className="px-6 py-16 text-center">
-            <p className="text-sm text-[var(--color-text-secondary)]">Cargando emisiones...</p>
-          </div>
+          <EmissionsTableSkeleton />
         ) : isError ? (
           <div className="px-6 py-16 text-center space-y-3">
             <p className="text-sm text-[var(--color-text-secondary)]">

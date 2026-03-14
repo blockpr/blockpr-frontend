@@ -13,16 +13,48 @@ interface ApiError {
 async function apiFetch<T = unknown>(path: string, options?: RequestInit): Promise<T> {
   // Destructuramos headers para que no se sobreescriban con ...options
   const { headers: extraHeaders, ...restOptions } = options ?? {}
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...restOptions,
-    headers: { 'Content-Type': 'application/json', ...extraHeaders },
-  })
-  const data = await res.json()
-  if (!res.ok) {
-    const err: ApiError = { status: res.status, message: data.error ?? 'Error inesperado' }
-    throw err
+  
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...restOptions,
+      headers: { 'Content-Type': 'application/json', ...extraHeaders },
+      credentials: 'include', // Incluir cookies en todas las requests
+    })
+    
+    // Si la respuesta no es JSON (por ejemplo, error de red), manejar el error
+    let data
+    try {
+      data = await res.json()
+    } catch {
+      // Si no se puede parsear JSON, crear un error genérico
+      if (!res.ok) {
+        const err: ApiError = { 
+          status: res.status, 
+          message: `Error ${res.status}: ${res.statusText || 'Error de red'}` 
+        }
+        throw err
+      }
+      // Si está OK pero no es JSON, retornar un objeto vacío
+      return {} as T
+    }
+    
+    if (!res.ok) {
+      const err: ApiError = { status: res.status, message: data.error ?? 'Error inesperado' }
+      throw err
+    }
+    return data as T
+  } catch (error) {
+    // Si es un error de red (failed to fetch), lanzar un error más descriptivo
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      const err: ApiError = { 
+        status: 0, 
+        message: 'Error de conexión. Verificá que el servidor esté corriendo y que CORS esté configurado correctamente.' 
+      }
+      throw err
+    }
+    // Re-lanzar otros errores
+    throw error
   }
-  return data as T
 }
 
 /**
@@ -58,10 +90,36 @@ export interface RegisterPayload {
 }
 
 export interface LoginResponse {
-  user: { id: string; email: string; company_name: string }
-  access_token: string
-  refresh_token: string
-  token_type: string
+  message: string
+  user: {
+    id: string
+    email: string
+    company_name: string
+    tax_id?: string | null
+    contact_name?: string | null
+    contact_phone?: string | null
+    address?: string | null
+    city?: string | null
+    country?: string | null
+    email_verified: boolean
+  }
+}
+
+export interface MeResponse {
+  user: {
+    id: string
+    email: string
+    company_name: string
+    tax_id?: string | null
+    contact_name?: string | null
+    contact_phone?: string | null
+    address?: string | null
+    city?: string | null
+    country?: string | null
+    email_verified: boolean
+    last_login_at?: string | null
+    created_at: string
+  }
 }
 
 export const authApi = {
@@ -107,16 +165,13 @@ export const authApi = {
       body: JSON.stringify({ refresh_token }),
     }),
 
-  logout: (refresh_token: string) =>
+  logout: () =>
     apiFetch('/auth/logout', {
       method: 'POST',
-      body: JSON.stringify({ refresh_token }),
     }),
 
-  me: (access_token: string) =>
-    apiFetch('/auth/me', {
-      headers: { Authorization: `Bearer ${access_token}` },
-    }),
+  me: () =>
+    apiFetch<MeResponse>('/auth/me'),
 }
 
 export interface ApiKeyResponse {
@@ -134,25 +189,21 @@ export interface CreateApiKeyResponse {
 }
 
 export const apiKeysApi = {
-  list: (access_token: string) =>
-    apiFetch<ApiKeyResponse[]>('/auth/api-keys', {
-      headers: { Authorization: `Bearer ${access_token}` },
-    }),
+  list: () =>
+    apiFetch<ApiKeyResponse[]>('/auth/api-keys'),
 
-  create: (access_token: string, name: string) => {
+  create: (name: string) => {
     const trimmedName = name.trim()
     console.log('Creating API key with name:', trimmedName)
     return apiFetch<CreateApiKeyResponse>('/auth/api-keys', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${access_token}` },
       body: JSON.stringify({ name: trimmedName }),
     })
   },
 
-  delete: (access_token: string, api_key_id: string) =>
+  delete: (api_key_id: string) =>
     apiFetch<{ message: string }>(`/auth/api-keys/${api_key_id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${access_token}` },
     }),
 }
 
@@ -184,8 +235,6 @@ export interface CertificatesListResponse {
 }
 
 export const certificatesApi = {
-  list: (access_token: string, page = 1, limit = 100) =>
-    apiFetch<CertificatesListResponse>(`/certificates?page=${page}&limit=${limit}`, {
-      headers: { Authorization: `Bearer ${access_token}` },
-    }),
+  list: (page = 1, limit = 100) =>
+    apiFetch<CertificatesListResponse>(`/certificates?page=${page}&limit=${limit}`),
 }

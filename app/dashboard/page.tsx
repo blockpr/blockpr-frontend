@@ -2,12 +2,11 @@
 
 import Link from 'next/link'
 import { useCallback } from 'react'
-import { getSession, useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { StatsCard } from '@/components/shared/StatsCard'
 import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
-import { certificatesApi, refreshSession } from '@/lib/api'
+import { certificatesApi } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import type { Emission, EmissionStatus } from '@/types'
 
@@ -35,67 +34,65 @@ function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certifi
   }
 }
 
+function RecentEmissionsSkeleton() {
+  return (
+    <>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <tr key={i} className="hover:bg-[var(--color-card-hover)] transition-colors">
+          <td className="px-6 py-3.5">
+            <div className="h-4 w-20 bg-[var(--color-border)] rounded animate-pulse" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-4 w-24 bg-[var(--color-border)] rounded animate-pulse" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-5 w-32 bg-[var(--color-border)] rounded animate-pulse" />
+          </td>
+          <td className="px-6 py-3.5">
+            <div className="h-5 w-20 bg-[var(--color-border)] rounded-full animate-pulse" />
+          </td>
+          <td className="px-6 py-3.5 text-right">
+            <div className="h-4 w-4 bg-[var(--color-border)] rounded animate-pulse ml-auto" />
+          </td>
+        </tr>
+      ))}
+    </>
+  )
+}
+
 export default function DashboardPage() {
-  const { status, update } = useSession()
-
   const fetchDashboardData = useCallback(async (): Promise<{ recent: Emission[]; stats: typeof INITIAL_STATS }> => {
-    let currentSession = await getSession()
+    const firstPage = await certificatesApi.list(1, 100)
 
-    if (!currentSession?.user?.accessToken) {
-      throw new Error('No hay sesión activa')
-    }
-
-    const loadData = async (accessToken: string) => {
-      const firstPage = await certificatesApi.list(accessToken, 1, 100)
-
-      let allCertificates = [...firstPage.data]
-      if (firstPage.pagination.pages > 1) {
-        const remainingPageCalls = Array.from(
-          { length: firstPage.pagination.pages - 1 },
-          (_, i) => certificatesApi.list(accessToken, i + 2, 100)
-        )
-        const remainingResponses = await Promise.all(remainingPageCalls)
-        for (const pageData of remainingResponses) {
-          allCertificates = allCertificates.concat(pageData.data)
-        }
-      }
-
-      const allEmissions = allCertificates.map(mapCertificateToEmission)
-      const stats = allEmissions.reduce(
-        (acc, emission) => {
-          acc.total += 1
-          if (emission.status === 'verified') acc.verified += 1
-          if (emission.status === 'pending') acc.pending += 1
-          if (emission.status === 'failed') acc.failed += 1
-          return acc
-        },
-        { ...INITIAL_STATS }
+    let allCertificates = [...firstPage.data]
+    if (firstPage.pagination.pages > 1) {
+      const remainingPageCalls = Array.from(
+        { length: firstPage.pagination.pages - 1 },
+        (_, i) => certificatesApi.list(i + 2, 100)
       )
-
-      return {
-        stats,
-        recent: allEmissions.slice(0, 5),
+      const remainingResponses = await Promise.all(remainingPageCalls)
+      for (const pageData of remainingResponses) {
+        allCertificates = allCertificates.concat(pageData.data)
       }
     }
 
-    try {
-      return await loadData(currentSession.user.accessToken)
-    } catch (error: any) {
-      if (error?.status === 401) {
-        await update()
-        await refreshSession()
-        currentSession = await getSession()
+    const allEmissions = allCertificates.map(mapCertificateToEmission)
+    const stats = allEmissions.reduce(
+      (acc, emission) => {
+        acc.total += 1
+        if (emission.status === 'verified') acc.verified += 1
+        if (emission.status === 'pending') acc.pending += 1
+        if (emission.status === 'failed') acc.failed += 1
+        return acc
+      },
+      { ...INITIAL_STATS }
+    )
 
-        if (!currentSession?.user?.accessToken) {
-          throw new Error('Sesión expirada. Iniciá sesión nuevamente.')
-        }
-
-        return await loadData(currentSession.user.accessToken)
-      }
-
-      throw error
+    return {
+      stats,
+      recent: allEmissions.slice(0, 5),
     }
-  }, [update])
+  }, [])
 
   const {
     data,
@@ -105,7 +102,6 @@ export default function DashboardPage() {
   } = useQuery({
     queryKey: ['dashboard-emissions-overview'],
     queryFn: fetchDashboardData,
-    enabled: status === 'authenticated',
   })
 
   const stats = data?.stats ?? INITIAL_STATS
@@ -192,13 +188,7 @@ export default function DashboardPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
-            {isLoading && (
-              <tr>
-                <td colSpan={5} className="px-6 py-6 text-center text-sm text-[var(--color-text-secondary)]">
-                  Cargando emisiones recientes...
-                </td>
-              </tr>
-            )}
+            {isLoading && <RecentEmissionsSkeleton />}
 
             {isError && (
               <tr>

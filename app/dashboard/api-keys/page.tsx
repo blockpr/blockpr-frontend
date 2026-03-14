@@ -190,8 +190,8 @@ function ApiKeyTableSkeleton() {
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--color-border)]">
-          {[1, 2, 3].map((i) => (
-            <tr key={i}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <tr key={i} className="hover:bg-[var(--color-card-hover)] transition-colors">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="h-4 w-24 bg-[var(--color-border)] rounded animate-pulse" />
               </td>
