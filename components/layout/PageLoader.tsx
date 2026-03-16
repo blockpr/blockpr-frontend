@@ -24,7 +24,7 @@ export function PageLoader({ onDone }: { onDone: () => void }) {
           100% { opacity: 1; transform: scale(1)    }
         }
         @keyframes pl-text {
-          from { opacity: 0; transform: translateY(7px) }
+          from { opacity: 0; transform: translateY(6px) }
           to   { opacity: 1; transform: translateY(0)   }
         }
         @keyframes pl-spin {
@@ -47,10 +47,9 @@ export function PageLoader({ onDone }: { onDone: () => void }) {
         transition: out ? 'opacity 0.65s cubic-bezier(0.4,0,1,1), transform 0.65s cubic-bezier(0.4,0,1,1)' : 'none',
       }}>
 
-        {/* Logo + spinning ring wrapper */}
+        {/* Logo + spinning ring */}
         <div style={{ position: 'relative', width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
-          {/* Spinning comet ring */}
           <div style={{
             position: 'absolute',
             inset: -14,
@@ -63,8 +62,6 @@ export function PageLoader({ onDone }: { onDone: () => void }) {
           }} />
 
           <svg width="64" height="64" viewBox="0 0 200 200" fill="none">
-
-            {/* Lines — draw in staggered */}
             <path d="M100 100V42" stroke="white" strokeWidth="3" strokeLinecap="round"
               strokeDasharray="70" strokeDashoffset="70"
               style={{ animation: 'pl-draw 0.45s 0.05s cubic-bezier(0.4,0,0.2,1) forwards' }} />
@@ -75,15 +72,13 @@ export function PageLoader({ onDone }: { onDone: () => void }) {
               strokeDasharray="70" strokeDashoffset="70"
               style={{ animation: 'pl-draw 0.45s 0.35s cubic-bezier(0.4,0,0.2,1) forwards' }} />
 
-            {/* Expanding pulse ring */}
             <circle cx="100" cy="100" r="16" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1">
-              <animate attributeName="r"       values="16;44"    dur="1.9s" begin="0.95s" repeatCount="indefinite"
+              <animate attributeName="r"       values="16;44"  dur="1.9s" begin="0.95s" repeatCount="indefinite"
                 calcMode="spline" keySplines="0.4 0 1 1" />
-              <animate attributeName="opacity" values="0.45;0"   dur="1.9s" begin="0.95s" repeatCount="indefinite"
+              <animate attributeName="opacity" values="0.45;0" dur="1.9s" begin="0.95s" repeatCount="indefinite"
                 calcMode="spline" keySplines="0.4 0 1 1" />
             </circle>
 
-            {/* Nodes — pop in staggered */}
             <g style={{ transformBox: 'fill-box', transformOrigin: 'center',
               animation: 'pl-node 0.38s 0.52s cubic-bezier(0.34,1.56,0.64,1) both' }}>
               <path d="M100 114C107.732 114 114 107.732 114 100C114 92.268 107.732 86 100 86C92.268 86 86 92.268 86 100C86 107.732 92.268 114 100 114Z"
@@ -105,7 +100,6 @@ export function PageLoader({ onDone }: { onDone: () => void }) {
                 fill="white" stroke="white" strokeWidth="4.5"/>
             </g>
 
-            {/* Inner center dot */}
             <path d="M100 104C102.209 104 104 102.209 104 100C104 97.7909 102.209 96 100 96C97.7909 96 96 97.7909 96 100C96 102.209 97.7909 104 100 104Z"
               fill="white"/>
           </svg>

@@ -35,7 +35,7 @@ export function LandingHero() {
     const lerp  = (a: number, b: number, t: number) => a + (b - a) * t
 
     type Ghost = { bx: number; by: number; r: number; waveAmp: number; waveFreq: number; brightness: number; wavePhaseX: number; wavePhaseY: number; ox: number; oy: number }
-    type ClusterNode = { targetIdx?: number; targetX?: number; targetY?: number; x: number; y: number; vx: number; vy: number; orbitAngle: number; orbitR: number; orbitFreq: number; r: number; brightness: number }
+    type ClusterNode = { targetIdx?: number; targetX?: number; targetY?: number; x: number; y: number; vx: number; vy: number; orbitAngle: number; orbitR: number; orbitFreq: number; r: number; brightness: number; linked?: boolean }
     type LogoTarget = { x: number; y: number }
 
     let ghosts: Ghost[] = []
@@ -111,7 +111,7 @@ export function LandingHero() {
       const logoBot  = cy + (128 - 100) / 100 * sc * 0.56
       const fontSize = Math.round(Math.min(W, H) * 0.255)
       const textCY   = logoBot + fontSize * 0.80
-      const STEP     = 6
+      const STEP     = 4
 
       const oc    = document.createElement('canvas')
       oc.width    = W
@@ -133,7 +133,6 @@ export function LandingHero() {
           }
         }
       }
-      while (pts.length > 700) pts.splice(Math.floor(Math.random() * pts.length), 1)
 
       textClusters = pts.map(t => ({
         targetX: t.x, targetY: t.y,
@@ -145,6 +144,7 @@ export function LandingHero() {
         orbitR:   2.5 + Math.random() * 4.0,
         orbitFreq: 0.05 + Math.random() * 0.09,
         orbitAngle: Math.random() * Math.PI * 2,
+        linked: Math.random() < 0.38,
       }))
     }
 
@@ -292,29 +292,30 @@ export function LandingHero() {
         if (d2 < RR2 && d2 > 0) {
           const dist = Math.sqrt(d2)
           const f = (1 - dist / REPEL_RADIUS) * REPEL_FORCE
-          c.vx += (dx / dist) * f * 0.07
-          c.vy += (dy / dist) * f * 0.07
+          c.vx += (dx / dist) * f * 0.001
+          c.vy += (dy / dist) * f * 0.001
         }
         c.vx *= DAMPING; c.vy *= DAMPING
         c.x  += c.vx;   c.y  += c.vy
       })
 
-      // Text cluster lines — spatial grid + single batched stroke
-      const TC_DIST = 13
-      const tccols  = Math.ceil(W / TC_DIST) + 1
-      const tcrows  = Math.ceil(H / TC_DIST) + 1
-      const tcSize  = tccols * tcrows
+      // Text cluster lines — solo nodos linked (~38%), spatial grid + single stroke
+      const TC_DIST   = 16
+      const linkedTC  = textClusters.filter(c => c.linked)
+      const tccols    = Math.ceil(W / TC_DIST) + 1
+      const tcrows    = Math.ceil(H / TC_DIST) + 1
+      const tcSize    = tccols * tcrows
       if (tcGrid.length !== tcSize) tcGrid = Array.from({ length: tcSize }, () => [])
       else tcGrid.forEach(c => { c.length = 0 })
-      textClusters.forEach((c, i) => {
+      linkedTC.forEach((c, i) => {
         const ci = Math.floor(c.x / TC_DIST) + Math.floor(c.y / TC_DIST) * tccols
         if (ci >= 0 && ci < tcSize) tcGrid[ci].push(i)
       })
       ctx.beginPath()
-      ctx.strokeStyle = `rgba(255,255,255,${0.15 * fi})`
+      ctx.strokeStyle = `rgba(255,255,255,${0.13 * fi})`
       ctx.lineWidth = 0.4
-      for (let i = 0; i < textClusters.length; i++) {
-        const a = textClusters[i]
+      for (let i = 0; i < linkedTC.length; i++) {
+        const a = linkedTC[i]
         const acx = Math.floor(a.x / TC_DIST), acy = Math.floor(a.y / TC_DIST)
         for (let dy2 = -1; dy2 <= 1; dy2++) {
           for (let dx2 = -1; dx2 <= 1; dx2++) {
@@ -322,7 +323,7 @@ export function LandingHero() {
             if (nx < 0 || nx >= tccols || ny < 0 || ny >= tcrows) continue
             for (const j of tcGrid[ny * tccols + nx]) {
               if (j <= i) continue
-              const b = textClusters[j]
+              const b = linkedTC[j]
               const ddx = a.x - b.x, ddy = a.y - b.y
               if (ddx*ddx + ddy*ddy < TC_DIST * TC_DIST) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y) }
             }
@@ -342,6 +343,7 @@ export function LandingHero() {
     }
 
     function resize() {
+      if (!canvas) return
       const rect = canvas.parentElement!.getBoundingClientRect()
       DPR = window.devicePixelRatio || 1
       W   = rect.width
@@ -375,8 +377,18 @@ export function LandingHero() {
   }, [])
 
   return (
-    <section className="w-full" style={{ height: 'calc(100vh + 80px)' }}>
+    <section className="w-full relative" style={{ height: 'calc(100vh + 80px)' }}>
       <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
+        <div className="flex items-center gap-2 px-3.5 py-2 rounded-[8px] border border-white/12 bg-white/4 backdrop-blur-sm">
+          <span className="text-[12px] text-white/45 tracking-widest uppercase font-medium">Desliza</span>
+          <svg className="w-3.5 h-3.5 text-white/35 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
     </section>
   )
 }

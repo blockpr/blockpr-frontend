@@ -1,0 +1,99 @@
+<h2>Estados de verificación</h2>
+<p class="subtitle">¿Cómo querés que se vea el banner de estado según el resultado? Mismo layout B en los tres casos.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0d0d0d;border-radius:8px;padding:14px;font-family:system-ui;font-size:11px;">
+
+        <!-- VÁLIDO -->
+        <div style="background:#071a0a;border:1px solid #1a4a1e;border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:38px;height:38px;border-radius:50%;background:#0d2e11;border:1.5px solid #1f6b26;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#3dd65c;font-size:16px;">✓</span>
+          </div>
+          <div>
+            <div style="color:#3dd65c;font-size:13px;font-weight:600;">Documento válido</div>
+            <div style="color:#2a6b32;font-size:10px;margin-top:2px;">Hash verificado en blockchain · Solana</div>
+          </div>
+        </div>
+
+        <!-- INVÁLIDO -->
+        <div style="background:#1a0707;border:1px solid #4a1a1a;border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:38px;height:38px;border-radius:50%;background:#2e0d0d;border:1.5px solid #6b1f1f;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#d63d3d;font-size:16px;">✗</span>
+          </div>
+          <div>
+            <div style="color:#d63d3d;font-size:13px;font-weight:600;">Documento inválido</div>
+            <div style="color:#6b2a2a;font-size:10px;margin-top:2px;">El hash no coincide con el registro on-chain</div>
+          </div>
+        </div>
+
+        <!-- NO ENCONTRADO -->
+        <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:50%;background:#1a1a1a;border:1.5px solid #333;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#555;font-size:16px;">?</span>
+          </div>
+          <div>
+            <div style="color:#888;font-size:13px;font-weight:600;">No encontrado</div>
+            <div style="color:#444;font-size:10px;margin-top:2px;">No existe ningún registro con este ID</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Color semántico sutil</h3>
+      <p>Verde / rojo / gris. Tono oscuro, acento de color solo en el banner. Discreto pero claro.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0d0d0d;border-radius:8px;padding:14px;font-family:system-ui;font-size:11px;">
+
+        <!-- VÁLIDO -->
+        <div style="border:1px solid #1f6b26;border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background:linear-gradient(90deg,#071a0a 0%,transparent 60%);pointer-events:none;"></div>
+          <div style="width:38px;height:38px;border-radius:50%;border:1.5px solid #3dd65c;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
+            <span style="color:#3dd65c;font-size:16px;">✓</span>
+          </div>
+          <div style="position:relative;">
+            <div style="color:#fff;font-size:13px;font-weight:600;">Documento válido</div>
+            <div style="color:#3dd65c;font-size:10px;margin-top:2px;opacity:.7;">Verificado en blockchain</div>
+          </div>
+        </div>
+
+        <!-- INVÁLIDO -->
+        <div style="border:1px solid #6b1f1f;border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background:linear-gradient(90deg,#1a0707 0%,transparent 60%);pointer-events:none;"></div>
+          <div style="width:38px;height:38px;border-radius:50%;border:1.5px solid #d63d3d;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
+            <span style="color:#d63d3d;font-size:16px;">✗</span>
+          </div>
+          <div style="position:relative;">
+            <div style="color:#fff;font-size:13px;font-weight:600;">Documento inválido</div>
+            <div style="color:#d63d3d;font-size:10px;margin-top:2px;opacity:.7;">Hash no coincide</div>
+          </div>
+        </div>
+
+        <!-- NO ENCONTRADO -->
+        <div style="border:1px solid #2a2a2a;border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background:linear-gradient(90deg,#111 0%,transparent 60%);pointer-events:none;"></div>
+          <div style="width:38px;height:38px;border-radius:50%;border:1.5px solid #444;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
+            <span style="color:#666;font-size:16px;">?</span>
+          </div>
+          <div style="position:relative;">
+            <div style="color:#888;font-size:13px;font-weight:600;">No encontrado</div>
+            <div style="color:#444;font-size:10px;margin-top:2px;">Sin registro en blockchain</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Borde de color + gradiente</h3>
+      <p>El color aparece solo en el borde y el gradiente lateral. Texto en blanco, acento más sutil y elegante.</p>
+    </div>
+  </div>
+
+</div>

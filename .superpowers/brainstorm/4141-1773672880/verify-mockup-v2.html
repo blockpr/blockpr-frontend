@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup v2 — Verificación de documento</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; min-height: 100vh; }
+
+  .nav { height: 60px; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: #fff; text-decoration: none; }
+
+  .page { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+  .eyebrow { font-size: 11px; color: rgba(255,255,255,0.25); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px; }
+
+  .banner { border-radius: 12px; padding: 20px 22px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .banner.valid   { background: #071a0a; border: 1px solid #1a4a1e; }
+  .banner.invalid { background: #1a0707; border: 1px solid #4a1a1a; }
+  .banner.unknown { background: #111;    border: 1px solid #222; }
+
+  .banner-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
+  .banner.valid   .banner-icon { background: #0d2e11; border: 1.5px solid #1f6b26; color: #3dd65c; }
+  .banner.invalid .banner-icon { background: #2e0d0d; border: 1.5px solid #6b1f1f; color: #d63d3d; }
+  .banner.unknown .banner-icon { background: #1a1a1a; border: 1.5px solid #333;    color: #555; }
+
+  .banner-title { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
+  .banner.valid   .banner-title { color: #3dd65c; }
+  .banner.invalid .banner-title { color: #d63d3d; }
+  .banner.unknown .banner-title { color: #666; }
+  .banner-sub { font-size: 12px; }
+  .banner.valid   .banner-sub { color: rgba(61,214,92,0.5); }
+  .banner.invalid .banner-sub { color: rgba(214,61,61,0.5); }
+  .banner.unknown .banner-sub { color: #333; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cell { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px 18px; }
+  .cell.wide { grid-column: 1 / -1; }
+  .cell-label { font-size: 10.5px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 8px; }
+  .cell-value { font-size: 13.5px; color: rgba(255,255,255,0.75); line-height: 1.4; }
+  .cell-value.hash { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: rgba(255,255,255,0.5); word-break: break-all; }
+  .cell-value.link { color: rgba(100,180,255,0.8); text-decoration: none; display: flex; align-items: center; gap: 5px; font-size: 12px; font-family: 'SF Mono', monospace; }
+
+  /* Company cell */
+  .company-row { display: flex; align-items: center; gap: 12px; }
+  .company-avatar { width: 40px; height: 40px; border-radius: 8px; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.6); flex-shrink: 0; overflow: hidden; }
+  .company-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .company-info { display: flex; flex-direction: column; gap: 3px; }
+  .company-name { font-size: 13.5px; color: rgba(255,255,255,0.8); font-weight: 500; }
+  .company-cuit { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+  .switcher { display: flex; gap: 8px; margin-bottom: 32px; }
+  .sw-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.4); transition: all .15s; }
+  .sw-btn.active, .sw-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.25); }
+
+  .not-found-note { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.2); text-align: center; line-height: 1.6; }
+
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 28px 0; }
+  .footer-note { display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(255,255,255,0.18); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <svg width="28" height="28" viewBox="0 0 200 200" fill="none">
+      <path d="M100 100V42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L148 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L52 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 114C107.732 114 114 107.732 114 100C114 92.268 107.732 86 100 86C92.268 86 86 92.268 86 100C86 107.732 92.268 114 100 114Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M100 50C104.418 50 108 46.4183 108 42C108 37.5817 104.418 34 100 34C95.5817 34 92 37.5817 92 42C92 46.4183 95.5817 50 100 50Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M148 136C152.418 136 156 132.418 156 128C156 123.582 152.418 120 148 120C143.582 120 140 123.582 140 128C140 132.418 143.582 136 148 136Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M52 136C56.4183 136 60 132.418 60 128C60 123.582 56.4183 120 52 120C47.5817 120 44 123.582 44 128C44 132.418 47.5817 136 52 136Z" fill="white" stroke="white" stroke-width="4.5"/>
+    </svg>
+    unickeys
+  </a>
+</nav>
+
+<div class="page">
+
+  <div class="switcher">
+    <button class="sw-btn active" onclick="setState('valid', this)">✓ Válido</button>
+    <button class="sw-btn" onclick="setState('invalid', this)">✗ Inválido</button>
+    <button class="sw-btn" onclick="setState('unknown', this)">? No encontrado</button>
+  </div>
+
+  <div class="eyebrow">Verificación de documento</div>
+
+  <div class="banner valid" id="banner">
+    <div class="banner-icon" id="banner-icon">✓</div>
+    <div class="banner-text">
+      <div class="banner-title" id="banner-title">Documento válido</div>
+      <div class="banner-sub" id="banner-sub">Hash verificado en blockchain · Solana</div>
+    </div>
+  </div>
+
+  <div id="data-section">
+    <div class="grid">
+
+      <!-- Empresa emisora con avatar -->
+      <div class="cell" style="grid-column: 1 / -1;">
+        <div class="cell-label">Empresa emisora</div>
+        <div class="company-row">
+          <div class="company-avatar">A</div>
+          <div class="company-info">
+            <div class="company-name">AutoCheck SA</div>
+            <div class="company-cuit">CUIT 30-71234567-8</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cell">
+        <div class="cell-label">Documento</div>
+        <div class="cell-value">Certificado de Inspección #4821</div>
+      </div>
+      <div class="cell">
+        <div class="cell-label">Fecha de registro</div>
+        <div class="cell-value">15 Mar 2026 · 14:32 UTC</div>
+      </div>
+      <div class="cell wide">
+        <div class="cell-label">Hash SHA-256</div>
+        <div class="cell-value hash">a3f9c2b7e81d4f6a0c5b9e2d7f1a4c8b3e6d9f2a5c8b1e4d7f0a3c6b9e2d5f8a1c4</div>
+      </div>
+      <div class="cell wide">
+        <div class="cell-label">Transacción blockchain</div>
+        <a class="cell-value link" href="#" onclick="return false">
+          5xKw3mNpQ9rLvFcY2sDtBhJeUaZwX7gMoIkn4VqPy
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="footer-note">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+      Este registro es inmutable. Fue sellado criptográficamente en Solana y no puede ser alterado.
+    </div>
+  </div>
+
+  <div id="not-found-section" style="display:none;">
+    <div class="not-found-note">
+      No existe ningún registro con este identificador.<br>
+      Si creés que es un error, contactá a la empresa emisora del documento.
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setState(state, btn) {
+  document.querySelectorAll('.sw-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const banner = document.getElementById('banner');
+  const icon = document.getElementById('banner-icon');
+  const title = document.getElementById('banner-title');
+  const sub = document.getElementById('banner-sub');
+  banner.className = 'banner ' + state;
+  if (state === 'valid') {
+    icon.textContent = '✓'; title.textContent = 'Documento válido'; sub.textContent = 'Hash verificado en blockchain · Solana';
+    document.getElementById('data-section').style.display = '';
+    document.getElementById('not-found-section').style.display = 'none';
+  } else if (state === 'invalid') {
+    icon.textContent = '✗'; title.textContent = 'Documento inválido'; sub.textContent = 'El hash no coincide con el registro on-chain';
+    document.getElementById('data-section').style.display = '';
+    document.getElementById('not-found-section').style.display = 'none';
+  } else {
+    icon.textContent = '?'; title.textContent = 'No encontrado'; sub.textContent = 'No existe ningún registro con este ID';
+    document.getElementById('data-section').style.display = 'none';
+    document.getElementById('not-found-section').style.display = '';
+  }
+}
+</script>
+</body>
+</html>
