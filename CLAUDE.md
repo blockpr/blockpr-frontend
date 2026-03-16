@@ -25,6 +25,8 @@ Flat structure — `app/`, `components/`, `lib/`, `stores/`, `types/`, `hooks/` 
 
 ## What this is
 
+**Product name: unickeys**
+
 B2B platform for issuing tamper-proof technical certificates backed by blockchain. Certificates are hashed (SHA-256), batched into a Merkle Tree, and the root is recorded on Solana (1 tx per batch). The value prop is anti-fraud and legal verifiability, not crypto.
 
 ## Target stack (not all installed yet — install before using)

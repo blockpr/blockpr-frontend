@@ -25,7 +25,8 @@ const schema = z
       .string()
       .min(8, 'Mínimo 8 caracteres')
       .regex(/[A-Z]/, 'Al menos una mayúscula')
-      .regex(/[0-9]/, 'Al menos un número'),
+      .regex(/[0-9]/, 'Al menos un número')
+      .regex(/[^A-Za-z0-9]/, 'Al menos un carácter especial'),
     confirmPassword: z.string(),
   })
   .refine((d) => d.password === d.confirmPassword, {
@@ -56,7 +57,7 @@ function GoogleButton({ onClick, loading }: { onClick: () => void; loading: bool
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-transparent text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-card)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-[6px] border border-[var(--color-border)] bg-transparent text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-card)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -82,6 +83,7 @@ export default function SignupPage() {
   const { data: session, status } = useSession()
   const [googleLoading, setGoogleLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [passwordFocused, setPasswordFocused] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [registered, setRegistered] = useState(false)
 
@@ -96,6 +98,7 @@ export default function SignupPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
@@ -175,11 +178,6 @@ export default function SignupPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Registrá tu empresa</h1>
-      <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">
-        Empezá a emitir certificados con respaldo blockchain
-      </p>
-
       <div className="mt-8 space-y-4">
         <GoogleButton onClick={handleGoogle} loading={googleLoading} />
 
@@ -187,7 +185,7 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {serverError && (
-            <div className="px-3.5 py-3 rounded-lg bg-[var(--color-danger-muted)] border border-[var(--color-danger)]/20">
+            <div className="px-3.5 py-3 rounded-[6px] bg-[var(--color-danger-muted)] border border-[var(--color-danger)]/20">
               <p className="text-sm text-[var(--color-danger)]">{serverError}</p>
             </div>
           )}
@@ -198,7 +196,7 @@ export default function SignupPage() {
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
               Nombre de empresa
             </label>
             <Input
@@ -212,7 +210,7 @@ export default function SignupPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+              <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
                 CUIT
               </label>
               <Input
@@ -229,7 +227,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+              <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
                 Contacto
               </label>
               <Input
@@ -243,7 +241,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
               Dirección
             </label>
             <Input
@@ -261,7 +259,7 @@ export default function SignupPage() {
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
               Email
             </label>
             <Input
@@ -276,20 +274,50 @@ export default function SignupPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+              <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
                 Contraseña
               </label>
-              <PasswordInput
-                placeholder="••••••••"
-                error={!!errors.password}
-                autoComplete="new-password"
-                {...register('password')}
-              />
-              <FieldError message={errors.password?.message} />
+              {(() => {
+                const passwordReg = register('password')
+                return (
+                  <PasswordInput
+                    placeholder="••••••••"
+                    error={!!errors.password}
+                    autoComplete="new-password"
+                    {...passwordReg}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={(e) => { setPasswordFocused(false); passwordReg.onBlur(e) }}
+                  />
+                )
+              })()}
+              <div className={`grid transition-all duration-200 ease-out ${passwordFocused ? 'grid-rows-[1fr] mt-2.5' : 'grid-rows-[0fr]'}`}>
+                <ul className="overflow-hidden space-y-1.5">
+                  {[
+                    { label: 'Mínimo 8 caracteres', test: (v: string) => v.length >= 8 },
+                    { label: 'Al menos una mayúscula', test: (v: string) => /[A-Z]/.test(v) },
+                    { label: 'Al menos un número', test: (v: string) => /[0-9]/.test(v) },
+                    { label: 'Al menos un carácter especial (!, @, #...)', test: (v: string) => /[^A-Za-z0-9]/.test(v) },
+                  ].map(({ label, test }) => {
+                    const val = String(watch('password') ?? '')
+                    const ok = val.length > 0 && test(val)
+                    return (
+                      <li key={label} className={`flex items-center gap-2 text-sm whitespace-nowrap transition-colors ${ok ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`}>
+                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          {ok
+                            ? <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            : <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          }
+                        </svg>
+                        {label}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+              <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
                 Confirmar
               </label>
               <PasswordInput
@@ -302,14 +330,14 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="mt-2">
+          <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="mt-2 !bg-white !text-black hover:!bg-white/90">
             Crear cuenta
           </Button>
         </form>
 
-        <p className="text-center text-sm text-[var(--color-text-secondary)]">
+        <p className="text-center text-sm text-white/50">
           ¿Ya tenés cuenta?{' '}
-          <Link href="/login" className="text-[var(--color-accent)] hover:underline font-medium">
+          <Link href="/login" className="text-white hover:text-white/70 font-medium transition-colors">
             Iniciar sesión
           </Link>
         </p>

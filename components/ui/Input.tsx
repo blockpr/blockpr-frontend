@@ -12,7 +12,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     <input
       ref={ref}
       className={cn(
-        'w-full px-3.5 py-2.5 rounded-lg text-sm outline-none transition-colors',
+        'w-full px-3.5 py-2.5 rounded-[6px] text-sm outline-none transition-colors',
         'bg-[var(--color-surface)] border',
         'text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
         error
@@ -39,7 +39,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           ref={ref}
           type={visible ? 'text' : 'password'}
           className={cn(
-            'w-full px-3.5 py-2.5 pr-10 rounded-lg text-sm outline-none transition-colors',
+            'w-full px-3.5 py-2.5 pr-10 rounded-[6px] text-sm outline-none transition-colors',
             'bg-[var(--color-surface)] border',
             'text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
             error

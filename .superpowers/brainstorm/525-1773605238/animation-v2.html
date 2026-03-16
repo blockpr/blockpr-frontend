@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unickeys — Animation v2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  .ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; }
+
+  /* Navbar */
+  .nav { pointer-events: all; height: 56px; display: flex; align-items: center; px: 32px; padding: 0 32px; border-bottom: 1px solid rgba(255,255,255,0.07); justify-content: space-between; backdrop-filter: none; }
+  .nav-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .nav-btns { display: flex; align-items: center; gap: 10px; }
+  .nav-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500; }
+  .nav-btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
+  .nav-btn.solid { background: #fff; border: 1px solid #fff; color: #000; display: flex; align-items: center; gap: 6px; }
+
+  /* Progress bar */
+  .progress { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; pointer-events: all; }
+  .progress-track { width: 200px; height: 1px; background: rgba(255,255,255,0.12); border-radius: 1px; overflow: hidden; }
+  .progress-fill { height: 100%; background: rgba(255,255,255,0.5); border-radius: 1px; transition: width 0.05s linear; }
+  .progress-label { font-size: 10px; color: rgba(255,255,255,0.25); letter-spacing: 0.08em; text-transform: uppercase; width: 80px; }
+
+  .controls { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: all; }
+  .cbtn { padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); transition: all 0.15s; }
+  .cbtn:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.25); }
+  .cbtn.on { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="ui">
+  <div class="nav">
+    <div class="nav-logo">
+      <svg width="26" height="26" viewBox="0 0 200 200" fill="none">
+        <path d="M100 100V42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <path d="M100 100L148 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <path d="M100 100L52 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="100" cy="42"  r="8" fill="white"/>
+        <circle cx="148" cy="128" r="8" fill="white"/>
+        <circle cx="52"  cy="128" r="8" fill="white"/>
+        <circle cx="100" cy="100" r="4.5" fill="white"/>
+      </svg>
+      unickeys
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn solid">Empezar ahora <span>→</span></button>
+      <button class="nav-btn ghost">Iniciar sesión</button>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="cbtn on" onclick="setSpeed(0.5,this)">0.5×</button>
+  <button class="cbtn"    onclick="setSpeed(1,this)">1×</button>
+  <button class="cbtn"    onclick="setSpeed(2,this)">2×</button>
+  <button class="cbtn"    onclick="setSpeed(3,this)">3×</button>
+</div>
+
+<div class="progress">
+  <span class="progress-label" id="plabel">Red blockchain</span>
+  <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  buildNodes();
+}
+window.addEventListener('resize', resize);
+
+// ─── Config ───────────────────────────────────────────────
+const NODE_COUNT  = 160;   // ghost + hero nodes
+const HERO_COUNT  = 4;
+const LINE_DIST   = 120;   // max distance for ghost lines
+const LOGO_SCALE  = 0.38;  // logo size relative to viewport height
+
+let speed = 0.5;
+function setSpeed(s, el) {
+  speed = s;
+  document.querySelectorAll('.cbtn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ─── Node pools ────────────────────────────────────────────
+let ghosts = [], heroStart = [], logoTargets = [];
+
+function buildNodes() {
+  const cx = W / 2, cy = H / 2;
+  const sc = Math.min(W, H) * LOGO_SCALE;
+
+  // Logo positions (200×200 space → canvas)
+  function lp(lx, ly) {
+    return {
+      x: cx + (lx - 100) / 100 * sc * 0.56,
+      y: cy + (ly - 100) / 100 * sc * 0.56,
+    };
+  }
+  logoTargets = [
+    { ...lp(100, 42),  r: 6 },   // top
+    { ...lp(148, 128), r: 6 },   // br
+    { ...lp(52,  128), r: 6 },   // bl
+    { ...lp(100, 100), r: 3.5 }, // center
+  ];
+
+  // Hero start: scattered across viewport
+  heroStart = [
+    { x: W * 0.12, y: H * 0.22 },
+    { x: W * 0.88, y: H * 0.78 },
+    { x: W * 0.08, y: H * 0.82 },
+    { x: W * 0.72, y: H * 0.12 },
+  ];
+
+  // Ghost nodes: quasi-uniform distribution (Poisson-ish via grid+jitter)
+  ghosts = [];
+  const cols = Math.ceil(Math.sqrt(NODE_COUNT * W / H));
+  const rows = Math.ceil(NODE_COUNT / cols);
+  const cellW = W / cols, cellH = H / rows;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (ghosts.length >= NODE_COUNT - HERO_COUNT) break;
+      ghosts.push({
+        bx: cellW * c + cellW * 0.1 + Math.random() * cellW * 0.8,
+        by: cellH * r + cellH * 0.1 + Math.random() * cellH * 0.8,
+        r:  0.8 + Math.random() * 1.6,
+        // Ordered wave movement: each node has a fixed wave phase based on position
+        waveAmp:  6 + Math.random() * 12,
+        waveFreq: 0.4 + Math.random() * 0.4,
+        wavePhaseX: 0,
+        wavePhaseY: 0,
+        brightness: 0.5 + Math.random() * 0.5,
+      });
+    }
+  }
+
+  // Assign wave phases AFTER positions are known — create a travelling wave
+  // by using grid coords as offset, giving an ordered "ocean wave" motion
+  ghosts.forEach((g, i) => {
+    // Phase based on normalized position → creates diagonal wave
+    const nx = g.bx / W;
+    const ny = g.by / H;
+    g.wavePhaseX = (nx + ny) * Math.PI * 4;   // diagonal wave
+    g.wavePhaseY = (nx - ny) * Math.PI * 3;
+  });
+}
+
+// ─── Math helpers ──────────────────────────────────────────
+const ease  = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi,v));
+const lerp  = (a,b,t) => a + (b-a)*t;
+
+// ─── Main loop ─────────────────────────────────────────────
+let time = 0;
+const PHASE_LABELS = ['Red blockchain', 'Convergencia', 'Logo emerge'];
+
+function draw() {
+  time += 0.006 * speed;
+
+  // Oscillate t between 0 and 1 (pause at ends)
+  const raw = (Math.sin(time) + 1) / 2;
+  // Apply slight pause at extremes
+  const T = clamp(raw, 0, 1);
+
+  // Phase breakpoints
+  const ghostFade  = clamp((T - 0.28) / 0.30, 0, 1);  // ghost opacity 1→0
+  const heroMorph  = ease(clamp(T / 0.82, 0, 1));       // hero position lerp
+  const lineFade   = ease(clamp((T - 0.55) / 0.35, 0, 1)); // logo lines appear
+  const textReveal = ease(clamp((T - 0.80) / 0.18, 0, 1)); // text appear
+  const logoScale  = lerp(1.35, 1.0, ease(clamp((T - 0.70) / 0.30, 0, 1))); // logo shrink
+
+  const ghostOpacity = 1 - ease(ghostFade);
+  const phaseIdx = T < 0.33 ? 0 : T < 0.66 ? 1 : 2;
+
+  // Progress bar
+  document.getElementById('pfill').style.width = (T * 100) + '%';
+  document.getElementById('plabel').textContent = PHASE_LABELS[phaseIdx];
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Compute current ghost positions (ordered wave)
+  const gPos = ghosts.map(g => ({
+    x: g.bx + Math.sin(time * g.waveFreq + g.wavePhaseX) * g.waveAmp,
+    y: g.by + Math.cos(time * g.waveFreq * 0.8 + g.wavePhaseY) * g.waveAmp * 0.7,
+    r: g.r,
+    brightness: g.brightness,
+  }));
+
+  // ── Compute hero positions
+  const cx = W / 2, cy = H / 2;
+  const heroes = logoTargets.map((target, i) => ({
+    x: lerp(heroStart[i].x, target.x, heroMorph),
+    y: lerp(heroStart[i].y, target.y, heroMorph),
+    r: lerp(2.5, target.r * logoScale, heroMorph),
+  }));
+
+  // ── Ghost lines
+  if (ghostOpacity > 0.005) {
+    for (let i = 0; i < gPos.length - 1; i++) {
+      for (let j = i + 1; j < gPos.length; j++) {
+        const a = gPos[i], b = gPos[j];
+        const dx = a.x-b.x, dy = a.y-b.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < LINE_DIST * LINE_DIST) {
+          const d = Math.sqrt(d2);
+          const alpha = ghostOpacity * (1 - d / LINE_DIST) * 0.22;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+          ctx.lineWidth = 0.6;
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // ── Logo lines
+  if (lineFade > 0.005) {
+    [[3,0],[3,1],[3,2]].forEach(([ai,bi]) => {
+      const a = heroes[ai], b = heroes[bi];
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${lineFade * 0.85})`;
+      ctx.lineWidth = lineFade * 1.4;
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    });
+  }
+
+  // ── Ghost dots
+  if (ghostOpacity > 0.005) {
+    gPos.forEach(g => {
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${ghostOpacity * g.brightness * 0.8})`;
+      ctx.fill();
+    });
+  }
+
+  // ── Hero dots
+  heroes.forEach(h => {
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, h.r, 0, Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  });
+
+  // ── Text reveal
+  if (textReveal > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = textReveal;
+    const sc = logoScale;
+    const bcy = cy + (128-100)/100 * Math.min(W,H) * LOGO_SCALE * 0.56;
+    const textY = bcy + 36 * sc + 28;
+    ctx.font = `${Math.round(600)} ${Math.round(18 * sc)}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.letterSpacing = '0.06em';
+    ctx.fillText('unickeys', cx, textY);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+resize();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

@@ -39,7 +39,7 @@ function GoogleButton({ onClick, loading }: { onClick: () => void; loading: bool
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-transparent text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-card)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-[6px] border border-[var(--color-border)] bg-transparent text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-card)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -133,11 +133,6 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Iniciar sesión</h1>
-      <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">
-        Accedé al panel de tu empresa
-      </p>
-
       <div className="mt-8 space-y-4">
         <GoogleButton onClick={handleGoogle} loading={googleLoading} />
 
@@ -145,7 +140,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {authError && (
-            <div className="px-3.5 py-3 rounded-lg bg-[var(--color-danger-muted)] border border-[var(--color-danger)]/20">
+            <div className="px-3.5 py-3 rounded-[6px] bg-[var(--color-danger-muted)] border border-[var(--color-danger)]/20">
               <p className="text-sm text-[var(--color-danger)]">{authError}</p>
               {showResend && (
                 <div className="mt-2">
@@ -169,7 +164,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
               Email
             </label>
             <Input
@@ -183,7 +178,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1.5">
               Contraseña
             </label>
             <PasswordInput
@@ -204,25 +199,18 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Button type="submit" fullWidth loading={isSubmitting} size="lg">
+          <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="!bg-white !text-black hover:!bg-white/90">
             Iniciar sesión
           </Button>
         </form>
 
-        <p className="text-center text-sm text-[var(--color-text-secondary)]">
+        <p className="text-center text-sm text-white/50">
           ¿No tenés cuenta?{' '}
-          <Link href="/signup" className="text-[var(--color-accent)] hover:underline font-medium">
+          <Link href="/signup" className="text-white hover:text-white/70 font-medium transition-colors">
             Registrarse
           </Link>
         </p>
 
-        {/* Credenciales demo */}
-        <div className="pt-2 border-t border-[var(--color-border)]">
-          <p className="text-center text-xs text-[var(--color-text-muted)]">
-            Demo: <span className="font-mono">demo@blockpr.io</span> /{' '}
-            <span className="font-mono">demo1234</span>
-          </p>
-        </div>
       </div>
     </AuthLayout>
   )

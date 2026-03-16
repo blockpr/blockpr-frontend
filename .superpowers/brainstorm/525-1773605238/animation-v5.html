@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unickeys — Animation v5</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; height: 300vh; }
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  .nav { position: fixed; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid rgba(255,255,255,0.10); justify-content: space-between; z-index: 10; background: #000; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
+  .nav-btns { display: flex; align-items: center; gap: 10px; }
+  .nav-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
+  .nav-btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.20); color: #fff; }
+  .nav-btn.ghost:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); }
+  .nav-btn.solid { background: #fff; border: 1px solid #fff; color: #000; }
+
+  .scroll-hint { position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 10; opacity: 1; transition: opacity 0.6s; }
+  .scroll-hint.hidden { opacity: 0; pointer-events: none; }
+  .scroll-hint span { font-size: 10px; color: rgba(255,255,255,0.25); letter-spacing: 0.12em; text-transform: uppercase; }
+  .scroll-chevrons { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .scroll-chevrons svg { opacity: 0; animation: chevronfall 1.6s ease-in-out infinite; }
+  .scroll-chevrons svg:nth-child(1) { animation-delay: 0s; }
+  .scroll-chevrons svg:nth-child(2) { animation-delay: 0.2s; }
+  .scroll-chevrons svg:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes chevronfall { 0%,100% { opacity: 0; transform: translateY(-4px); } 50% { opacity: 0.5; transform: translateY(0); } }
+
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="nav">
+  <div class="nav-logo">
+    <svg width="36" height="36" viewBox="0 0 200 200" fill="none">
+      <path d="M100 100V42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L148 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L52 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 114C107.732 114 114 107.732 114 100C114 92.268 107.732 86 100 86C92.268 86 86 92.268 86 100C86 107.732 92.268 114 100 114Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M100 50C104.418 50 108 46.4183 108 42C108 37.5817 104.418 34 100 34C95.5817 34 92 37.5817 92 42C92 46.4183 95.5817 50 100 50Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M148 136C152.418 136 156 132.418 156 128C156 123.582 152.418 120 148 120C143.582 120 140 123.582 140 128C140 132.418 143.582 136 148 136Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M52 136C56.4183 136 60 132.418 60 128C60 123.582 56.4183 120 52 120C47.5817 120 44 123.582 44 128C44 132.418 47.5817 136 52 136Z" fill="white" stroke="white" stroke-width="4.5"/>
+    </svg>
+    unickeys
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn solid" style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+      Empezar ahora
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+    </button>
+    <button class="nav-btn ghost">Iniciar sesión</button>
+  </div>
+</div>
+
+<div class="scroll-hint" id="scrollHint">
+  <span>scroll</span>
+  <div class="scroll-chevrons">
+    <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><polyline points="1,1 8,8 15,1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><polyline points="1,1 8,8 15,1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><polyline points="1,1 8,8 15,1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W, H, DPR = 1;
+
+const NODE_COUNT   = 560;
+const LINE_DIST    = 120;
+const LOGO_SCALE   = 0.38;
+const LOGO_X_RATIO = 0.30;
+const LOGO_Y_RATIO = 0.50;
+
+let scrollT = 0;
+window.addEventListener('scroll', () => {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  scrollT = max > 0 ? window.scrollY / max : 0;
+document.getElementById('scrollHint').classList.toggle('hidden', scrollT > 0.02);
+}, { passive: true });
+
+let ghosts = [], heroStart = [], logoTargets = [];
+
+function buildNodes() {
+  const cx = W * LOGO_X_RATIO;
+  const cy = H * LOGO_Y_RATIO;
+  const sc = Math.min(W, H) * LOGO_SCALE;
+
+  function lp(lx, ly) {
+    return {
+      x: cx + (lx - 100) / 100 * sc * 0.56,
+      y: cy + (ly - 100) / 100 * sc * 0.56,
+    };
+  }
+
+  logoTargets = [
+    { ...lp(100, 42),  r: 10  },
+    { ...lp(148, 128), r: 10  },
+    { ...lp(52,  128), r: 10  },
+    { ...lp(100, 100), r: 5.5 },
+  ];
+
+  heroStart = [
+    { x: W * 0.14, y: H * 0.18 },
+    { x: W * 0.90, y: H * 0.80 },
+    { x: W * 0.06, y: H * 0.85 },
+    { x: W * 0.75, y: H * 0.10 },
+  ];
+
+  ghosts = [];
+  const cols = Math.ceil(Math.sqrt(NODE_COUNT * W / H));
+  const rows = Math.ceil(NODE_COUNT / cols);
+  const cellW = W / cols, cellH = H / rows;
+
+  for (let r = 0; r < rows && ghosts.length < NODE_COUNT - 4; r++) {
+    for (let c = 0; c < cols && ghosts.length < NODE_COUNT - 4; c++) {
+      const g = {
+        bx: cellW * c + cellW * 0.1 + Math.random() * cellW * 0.8,
+        by: cellH * r + cellH * 0.1 + Math.random() * cellH * 0.8,
+        r:  0.8 + Math.random() * 1.6,
+        waveAmp:  6 + Math.random() * 12,
+        waveFreq: 0.4 + Math.random() * 0.4,
+        brightness: 0.45 + Math.random() * 0.55,
+        ox: 0, oy: 0, // offset suave del mouse
+      };
+      g.wavePhaseX = (g.bx / W + g.by / H) * Math.PI * 4;
+      g.wavePhaseY = (g.bx / W - g.by / H) * Math.PI * 3;
+      ghosts.push(g);
+    }
+  }
+}
+
+const ease     = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+// Ease out cubic — más suave al llegar, ideal para fade-in de texto
+const easeOut  = t => 1 - Math.pow(1 - t, 3);
+const clamp    = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp     = (a,b,t) => a + (b-a)*t;
+
+let mouse = { x: -9999, y: -9999 };
+const MOUSE_RADIUS  = 180;  // radio de influencia
+const MOUSE_ATTRACT = 60;   // fuerza máxima de atracción (px)
+
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+let time = 0;
+
+function draw() {
+  time += 0.016; // solo para el movimiento de olas, independiente del scroll
+  const T = scrollT;
+
+  const ghostOpacity = 1 - ease(clamp((T - 0.28) / 0.30, 0, 1));
+  const heroMorph    = ease(clamp(T / 0.82, 0, 1));
+  const lineFade     = ease(clamp((T - 0.55) / 0.35, 0, 1));
+  const logoShrink   = lerp(1.3, 1.0, ease(clamp((T - 0.70) / 0.30, 0, 1)));
+
+  // Texto: empieza más tarde, dura más → transición más lenta y suave
+  const textReveal   = easeOut(clamp((T - 0.75) / 0.24, 0, 1));
+
+  ctx.save();
+  ctx.scale(DPR, DPR);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  const gPos = ghosts.map(g => {
+    const wx = g.bx + Math.sin(time * g.waveFreq + g.wavePhaseX) * g.waveAmp;
+    const wy = g.by + Math.cos(time * g.waveFreq * 0.8 + g.wavePhaseY) * g.waveAmp * 0.7;
+    const dx = mouse.x - wx;
+    const dy = mouse.y - wy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const pull = dist < MOUSE_RADIUS ? (1 - dist / MOUSE_RADIUS) * MOUSE_ATTRACT : 0;
+    const targetOx = dist > 0 ? (dx / dist) * pull : 0;
+    const targetOy = dist > 0 ? (dy / dist) * pull : 0;
+    g.ox = lerp(g.ox, targetOx, 0.04); // 0.04 = muy lento y suave
+    g.oy = lerp(g.oy, targetOy, 0.04);
+    const nearFactor = Math.max(0, 1 - Math.sqrt((mouse.x - wx - g.ox) ** 2 + (mouse.y - wy - g.oy) ** 2) / MOUSE_RADIUS);
+    return {
+      x: wx + g.ox,
+      y: wy + g.oy,
+      r: g.r + nearFactor * 1.0,
+      brightness: g.brightness + nearFactor * 0.4,
+    };
+  });
+
+  const heroes = logoTargets.map((target, i) => ({
+    x: lerp(heroStart[i].x, target.x, heroMorph),
+    y: lerp(heroStart[i].y, target.y, heroMorph),
+    r: lerp(2.5, target.r * logoShrink, heroMorph),
+  }));
+
+  // Ghost lines
+  if (ghostOpacity > 0.005) {
+    for (let i = 0; i < gPos.length - 1; i++) {
+      for (let j = i + 1; j < gPos.length; j++) {
+        const a = gPos[i], b = gPos[j];
+        const dx = a.x-b.x, dy = a.y-b.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < LINE_DIST * LINE_DIST) {
+          const d = Math.sqrt(d2);
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255,255,255,${ghostOpacity * (1-d/LINE_DIST) * 0.22})`;
+          ctx.lineWidth = 0.6;
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Logo lines
+  if (lineFade > 0.005) {
+    [[3,0],[3,1],[3,2]].forEach(([ai,bi]) => {
+      const a = heroes[ai], b = heroes[bi];
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${lineFade * 0.85})`;
+      ctx.lineWidth = lineFade * 1.6;
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    });
+  }
+
+  // Ghost dots
+  if (ghostOpacity > 0.005) {
+    gPos.forEach(g => {
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${ghostOpacity * g.brightness * 0.8})`;
+      ctx.fill();
+    });
+  }
+
+  // Hero dots
+  heroes.forEach(h => {
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, h.r, 0, Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  });
+
+  // unickeys — subido (logoCy - offset) y transición más lenta
+  if (textReveal > 0.005) {
+    const logoCx    = W * LOGO_X_RATIO;
+    const logoCy    = H * LOGO_Y_RATIO;
+    const sc        = Math.min(W, H) * LOGO_SCALE;
+    const rightEdge = logoCx + (148-100)/100 * sc * 0.56 + 10 * logoShrink;
+    const textX     = rightEdge + 56;
+    const fontSize  = Math.round(120 * logoShrink);
+
+    // Subido: alineado al nodo top del logo en vez del centro
+    const topNodeY  = logoCy + (42-100)/100 * sc * 0.56 * logoShrink;
+    const textY     = topNodeY + fontSize * 0.72; // baseline visual centrada en el logo
+
+    // Slide suave desde abajo (más travel, más lento)
+    const slideY    = lerp(28, 0, textReveal);
+
+    ctx.save();
+    ctx.globalAlpha = textReveal;
+    ctx.font         = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle    = '#fff';
+    ctx.fillText('unickeys', textX, textY + slideY);
+    ctx.restore();
+  }
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+
+function resize() {
+  DPR = window.devicePixelRatio || 1;
+  W   = window.innerWidth;
+  H   = window.innerHeight;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  buildNodes();
+}
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

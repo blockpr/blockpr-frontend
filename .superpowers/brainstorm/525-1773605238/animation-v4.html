@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unickeys — Animation v4</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  .nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; padding: 0 32px; border-bottom: 1px solid rgba(255,255,255,0.07); justify-content: space-between; z-index: 10; }
+  .nav-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; }
+  .nav-btns { display: flex; align-items: center; gap: 10px; }
+  .nav-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500; }
+  .nav-btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
+  .nav-btn.solid { background: #fff; border: 1px solid #fff; color: #000; }
+
+  .controls { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+  .cbtn { padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); transition: all 0.15s; }
+  .cbtn:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.25); }
+  .cbtn.on { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="nav">
+  <div class="nav-logo">
+    <svg width="26" height="26" viewBox="0 0 200 200" fill="none">
+      <path d="M100 100V42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L148 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L52 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="100" cy="42"  r="8" fill="white"/>
+      <circle cx="148" cy="128" r="8" fill="white"/>
+      <circle cx="52"  cy="128" r="8" fill="white"/>
+      <circle cx="100" cy="100" r="4.5" fill="white"/>
+    </svg>
+    unickeys
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn solid">Empezar ahora →</button>
+    <button class="nav-btn ghost">Iniciar sesión</button>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="cbtn"    onclick="setSpeed(0.5,this)">0.5×</button>
+  <button class="cbtn"    onclick="setSpeed(1,this)">1×</button>
+  <button class="cbtn on" onclick="setSpeed(2,this)">2×</button>
+  <button class="cbtn"    onclick="setSpeed(3,this)">3×</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W, H, DPR = 1;
+
+const NODE_COUNT  = 160;
+const LINE_DIST   = 120;
+const LOGO_SCALE  = 0.38;
+const LOGO_X_RATIO = 0.30;
+const LOGO_Y_RATIO = 0.50;
+
+let speed = 2;
+function setSpeed(s, el) {
+  speed = s;
+  document.querySelectorAll('.cbtn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+let ghosts = [], heroStart = [], logoTargets = [];
+
+function buildNodes() {
+  const cx = W * LOGO_X_RATIO;
+  const cy = H * LOGO_Y_RATIO;
+  const sc = Math.min(W, H) * LOGO_SCALE;
+
+  function lp(lx, ly) {
+    return {
+      x: cx + (lx - 100) / 100 * sc * 0.56,
+      y: cy + (ly - 100) / 100 * sc * 0.56,
+    };
+  }
+
+  logoTargets = [
+    { ...lp(100, 42),  r: 10  },
+    { ...lp(148, 128), r: 10  },
+    { ...lp(52,  128), r: 10  },
+    { ...lp(100, 100), r: 5.5 },
+  ];
+
+  heroStart = [
+    { x: W * 0.14, y: H * 0.18 },
+    { x: W * 0.90, y: H * 0.80 },
+    { x: W * 0.06, y: H * 0.85 },
+    { x: W * 0.75, y: H * 0.10 },
+  ];
+
+  ghosts = [];
+  const cols = Math.ceil(Math.sqrt(NODE_COUNT * W / H));
+  const rows = Math.ceil(NODE_COUNT / cols);
+  const cellW = W / cols, cellH = H / rows;
+
+  for (let r = 0; r < rows && ghosts.length < NODE_COUNT - 4; r++) {
+    for (let c = 0; c < cols && ghosts.length < NODE_COUNT - 4; c++) {
+      const g = {
+        bx: cellW * c + cellW * 0.1 + Math.random() * cellW * 0.8,
+        by: cellH * r + cellH * 0.1 + Math.random() * cellH * 0.8,
+        r:  0.8 + Math.random() * 1.6,
+        waveAmp:  6 + Math.random() * 12,
+        waveFreq: 0.4 + Math.random() * 0.4,
+        brightness: 0.45 + Math.random() * 0.55,
+      };
+      g.wavePhaseX = (g.bx / W + g.by / H) * Math.PI * 4;
+      g.wavePhaseY = (g.bx / W - g.by / H) * Math.PI * 3;
+      ghosts.push(g);
+    }
+  }
+}
+
+const ease  = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp  = (a,b,t) => a + (b-a)*t;
+
+let time = 0;
+
+function draw() {
+  time += 0.006 * speed;
+  const T = (Math.sin(time) + 1) / 2;
+
+  const ghostOpacity = 1 - ease(clamp((T - 0.28) / 0.30, 0, 1));
+  const heroMorph    = ease(clamp(T / 0.82, 0, 1));
+  const lineFade     = ease(clamp((T - 0.55) / 0.35, 0, 1));
+  const textReveal   = ease(clamp((T - 0.80) / 0.18, 0, 1));
+  const logoShrink   = lerp(1.3, 1.0, ease(clamp((T - 0.70) / 0.30, 0, 1)));
+
+  // Clear — use CSS px coords (canvas is already scaled by DPR internally)
+  ctx.save();
+  ctx.scale(DPR, DPR);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // Ghost positions
+  const gPos = ghosts.map(g => ({
+    x: g.bx + Math.sin(time * g.waveFreq + g.wavePhaseX) * g.waveAmp,
+    y: g.by + Math.cos(time * g.waveFreq * 0.8 + g.wavePhaseY) * g.waveAmp * 0.7,
+    r: g.r,
+    brightness: g.brightness,
+  }));
+
+  // Hero positions
+  const heroes = logoTargets.map((target, i) => ({
+    x: lerp(heroStart[i].x, target.x, heroMorph),
+    y: lerp(heroStart[i].y, target.y, heroMorph),
+    r: lerp(2.5, target.r * logoShrink, heroMorph),
+  }));
+
+  // Ghost lines
+  if (ghostOpacity > 0.005) {
+    for (let i = 0; i < gPos.length - 1; i++) {
+      for (let j = i + 1; j < gPos.length; j++) {
+        const a = gPos[i], b = gPos[j];
+        const dx = a.x-b.x, dy = a.y-b.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < LINE_DIST * LINE_DIST) {
+          const d = Math.sqrt(d2);
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255,255,255,${ghostOpacity * (1-d/LINE_DIST) * 0.22})`;
+          ctx.lineWidth = 0.6;
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Logo lines
+  if (lineFade > 0.005) {
+    [[3,0],[3,1],[3,2]].forEach(([ai,bi]) => {
+      const a = heroes[ai], b = heroes[bi];
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${lineFade * 0.85})`;
+      ctx.lineWidth = lineFade * 1.6;
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    });
+  }
+
+  // Ghost dots
+  if (ghostOpacity > 0.005) {
+    gPos.forEach(g => {
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${ghostOpacity * g.brightness * 0.8})`;
+      ctx.fill();
+    });
+  }
+
+  // Hero dots
+  heroes.forEach(h => {
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, h.r, 0, Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  });
+
+  // unickeys text — derecha del logo, 120px, nítido gracias al DPR scale
+  if (textReveal > 0.01) {
+    const logoCx  = W * LOGO_X_RATIO;
+    const logoCy  = H * LOGO_Y_RATIO;
+    const sc      = Math.min(W, H) * LOGO_SCALE;
+    const rightEdge = logoCx + (148-100)/100 * sc * 0.56 + 10 * logoShrink;
+    const textX   = rightEdge + 32;
+    const textY   = logoCy + 8;
+    const fontSize = Math.round(120 * logoShrink);
+    const slideX  = lerp(16, 0, textReveal);
+
+    ctx.save();
+    ctx.globalAlpha = textReveal;
+    ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle    = '#fff';
+    ctx.fillText('unickeys', textX + slideX, textY);
+    ctx.restore();
+  }
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+
+function resize() {
+  DPR = window.devicePixelRatio || 1;
+  W   = window.innerWidth;
+  H   = window.innerHeight;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  buildNodes();
+}
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

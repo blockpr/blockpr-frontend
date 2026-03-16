@@ -16,8 +16,7 @@ function Modal({ children }: { children: React.ReactNode }) {
   return createPortal(
     <div
       data-theme={theme === 'dark' ? undefined : theme}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50"
-      style={{ backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
     >
       {children}
     </div>,
@@ -91,37 +90,51 @@ function DeleteKeyModal({
 }) {
   return (
     <Modal>
-      <div className="w-full max-w-md border border-[var(--color-border)] bg-[var(--color-card)] p-6 rounded-[6px]">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-9 h-9 bg-[var(--color-danger-muted)] flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      <div className="w-full max-w-sm border border-[var(--color-border)] bg-[var(--color-card)] rounded-[8px] shadow-2xl">
+        {/* Header */}
+        <div className="flex items-start justify-between p-5 pb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 bg-[var(--color-danger-muted)] rounded-[6px] flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-4.5 h-4.5 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Eliminar API Key</h3>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Esta acción no se puede deshacer</p>
+            </div>
+          </div>
+          <button
+            onClick={onCancel}
+            disabled={isDeleting}
+            className="p-1 rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors disabled:opacity-40"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Eliminar API Key</h3>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Esta acción no se puede deshacer</p>
-          </div>
+          </button>
         </div>
-        <div className="mb-5">
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            ¿Estás seguro de que querés eliminar la API key{' '}
+
+        {/* Body */}
+        <div className="px-5 pb-5">
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            ¿Querés eliminar la key{' '}
             <span className="font-medium text-[var(--color-text-primary)]">"{keyName}"</span>?
-          </p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-2">
-            Una vez eliminada, no podrás usar esta key para autenticarte.
+            {' '}Una vez eliminada no podrás usarla para autenticarte.
           </p>
         </div>
-        <div className="flex gap-2">
+
+        {/* Footer */}
+        <div className="flex gap-2.5 px-5 pb-5">
           <Button onClick={onCancel} variant="secondary" disabled={isDeleting} className="flex-1 rounded-[6px]">
             Cancelar
           </Button>
           <Button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 rounded-[6px] bg-[var(--color-danger)] hover:opacity-90 text-white"
+            className="flex-1 rounded-[6px] !bg-white hover:!bg-white/90 !text-black"
           >
-            {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+            {isDeleting ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </div>
       </div>
@@ -229,15 +242,13 @@ export default function ApiKeysClient({ initialKeys }: ApiKeysClientProps) {
             Gestioná las claves de API para integrar BlockPR con tus sistemas
           </p>
         </div>
-        {!showCreateForm && (
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            size="sm"
-            className="rounded-[6px] bg-white !text-black hover:bg-gray-100 shrink-0"
-          >
-            + Nueva key
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowCreateForm(true)}
+          size="sm"
+          className="rounded-[6px] bg-white !text-black hover:bg-gray-100 shrink-0"
+        >
+          + Nueva key
+        </Button>
       </div>
 
       {error && (
@@ -247,34 +258,50 @@ export default function ApiKeysClient({ initialKeys }: ApiKeysClientProps) {
       )}
 
       {showCreateForm && (
-        <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-5 rounded-[6px] max-w-2xl">
-          <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">Nueva API Key</p>
-          <div className="flex gap-2">
-            <input
-              autoFocus
-              type="text"
-              placeholder="Nombre (ej: Producción, Testing)"
-              value={creatingName}
-              onChange={(e) => setCreatingName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              className="flex-1 px-3.5 py-2 rounded-[6px] text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
-            />
-            <Button
-              onClick={handleCreate}
-              disabled={!creatingName.trim() || creating}
-              className="rounded-[6px] bg-white !text-black hover:bg-gray-100"
-            >
-              {creating ? 'Generando...' : 'Generar'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => { setShowCreateForm(false); setCreatingName('') }}
-              className="rounded-[6px]"
-            >
-              Cancelar
-            </Button>
+        <Modal>
+          <div className="w-full max-w-sm border border-[var(--color-border)] bg-[var(--color-card)] rounded-[8px] shadow-2xl">
+            <div className="flex items-center justify-between p-5 pb-4">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Nueva API Key</h3>
+              <button
+                onClick={() => { setShowCreateForm(false); setCreatingName('') }}
+                disabled={creating}
+                className="p-1 rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors disabled:opacity-40"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-5 pb-5 space-y-3">
+              <input
+                autoFocus
+                type="text"
+                placeholder="Nombre (ej: Producción, Testing)"
+                value={creatingName}
+                onChange={(e) => setCreatingName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                className="w-full px-3.5 py-2 rounded-[6px] text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-accent)] transition-colors"
+              />
+              <div className="flex gap-2.5">
+                <Button
+                  variant="secondary"
+                  onClick={() => { setShowCreateForm(false); setCreatingName('') }}
+                  disabled={creating}
+                  className="flex-1 rounded-[6px]"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreate}
+                  disabled={!creatingName.trim() || creating}
+                  className="flex-1 rounded-[6px] !bg-white hover:!bg-white/90 !text-black"
+                >
+                  {creating ? 'Generando...' : 'Generar'}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden rounded-[6px] w-full">

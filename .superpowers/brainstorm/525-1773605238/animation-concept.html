@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unickeys — Animation Concept</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; overflow-x: hidden; }
+
+  .header { padding: 24px 40px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; }
+  .header-logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; }
+  .header-tag { font-size: 11px; color: rgba(255,255,255,0.3); font-weight: 400; background: rgba(255,255,255,0.06); padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+
+  .preview-container { display: flex; flex-direction: column; align-items: center; padding: 48px 40px 0; }
+  .preview-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 32px; }
+
+  canvas { display: block; border-radius: 4px; }
+
+  .phases { display: flex; gap: 0; margin-top: 0; width: 100%; max-width: 900px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .phase { flex: 1; padding: 20px 24px; border-right: 1px solid rgba(255,255,255,0.08); }
+  .phase:last-child { border-right: none; }
+  .phase-num { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.2); text-transform: uppercase; margin-bottom: 6px; }
+  .phase-name { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px; }
+  .phase-desc { font-size: 11px; color: rgba(255,255,255,0.3); line-height: 1.5; }
+  .phase-bar { height: 2px; background: rgba(255,255,255,0.08); margin-top: 12px; border-radius: 1px; overflow: hidden; }
+  .phase-fill { height: 100%; background: rgba(255,255,255,0.4); border-radius: 1px; transition: width 0.1s linear; }
+
+  .controls { display: flex; gap: 12px; margin-top: 32px; margin-bottom: 40px; }
+  .btn { padding: 8px 20px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); transition: all 0.15s; letter-spacing: 0.02em; }
+  .btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.3); }
+  .btn.active { background: #fff; color: #000; border-color: #fff; }
+
+  .speed-label { font-size: 11px; color: rgba(255,255,255,0.3); display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <svg width="28" height="28" viewBox="0 0 200 200" fill="none">
+      <path d="M100 100V42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L148 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L52 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="100" cy="42" r="8" fill="white"/>
+      <circle cx="148" cy="128" r="8" fill="white"/>
+      <circle cx="52" cy="128" r="8" fill="white"/>
+      <circle cx="100" cy="100" r="5" fill="white"/>
+    </svg>
+    unickeys
+  </div>
+  <span class="header-tag">Animation Concept Preview</span>
+</div>
+
+<div class="preview-container">
+  <div class="preview-label">Scroll Hero Animation — Preview en loop automático</div>
+  <canvas id="c" width="900" height="500"></canvas>
+
+  <div class="phases" style="max-width:900px; width:100%;">
+    <div class="phase">
+      <div class="phase-num">Fase 01 · 0–33% scroll</div>
+      <div class="phase-name">Red blockchain</div>
+      <div class="phase-desc">~45 nodos con líneas de proximidad. Representa nodos distribuidos en internet.</div>
+      <div class="phase-bar"><div class="phase-fill" id="bar0" style="width:0%"></div></div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">Fase 02 · 33–66% scroll</div>
+      <div class="phase-name">Convergencia</div>
+      <div class="phase-desc">Los nodos ghost se desvanecen. Los 4 nodos héroe empiezan a agruparse.</div>
+      <div class="phase-bar"><div class="phase-fill" id="bar1" style="width:0%"></div></div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">Fase 03 · 66–100% scroll</div>
+      <div class="phase-name">Logo emerge</div>
+      <div class="phase-desc">El logo aparece grande y centrado. Luego se achica y aparece "unickeys".</div>
+      <div class="phase-bar"><div class="phase-fill" id="bar2" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="speed-label">Velocidad:</div>
+    <button class="btn" id="slow" onclick="setSpeed(0.4)">Lenta</button>
+    <button class="btn active" id="normal" onclick="setSpeed(1)">Normal</button>
+    <button class="btn" id="fast" onclick="setSpeed(2)">Rápida</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+let speed = 1;
+let t = 0; // 0 to 1 global progress
+let dir = 1;
+
+function setSpeed(s) {
+  speed = s;
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+  const ids = { 0.4: 'slow', 1: 'normal', 2: 'fast' };
+  document.getElementById(ids[s])?.classList.add('active');
+}
+
+// ── Logo nodes (normalized 0-1 in 200x200 space, then mapped to canvas)
+const LOGO_SCALE = 0.55;
+const LOGO_CENTER_X = W / 2;
+const LOGO_CENTER_Y = H / 2 - 20;
+
+function logoPos(lx, ly) {
+  const nx = (lx - 100) / 100;
+  const ny = (ly - 100) / 100;
+  return {
+    x: LOGO_CENTER_X + nx * (H * LOGO_SCALE * 0.56),
+    y: LOGO_CENTER_Y + ny * (H * LOGO_SCALE * 0.56)
+  };
+}
+
+const LOGO_NODES = [
+  { ...logoPos(100, 42),  r: 7.5 },  // top
+  { ...logoPos(148, 128), r: 7.5 },  // br
+  { ...logoPos(52,  128), r: 7.5 },  // bl
+  { ...logoPos(100, 100), r: 4.5 },  // center
+];
+const LOGO_LINES = [[3,0],[3,1],[3,2]];
+
+// ── Ghost nodes — distributed in grid + noise
+const GHOST_COUNT = 40;
+const ghosts = [];
+for (let i = 0; i < GHOST_COUNT; i++) {
+  const col = i % 8;
+  const row = Math.floor(i / 8);
+  ghosts.push({
+    x: 60 + col * (W - 120) / 7 + (Math.random() - 0.5) * 60,
+    y: 60 + row * (H - 120) / 4 + (Math.random() - 0.5) * 40,
+    r: 2.5 + Math.random() * 2,
+    speed: 0.3 + Math.random() * 0.4,
+    phase: Math.random() * Math.PI * 2,
+    drift: { x: (Math.random() - 0.5) * 0.3, y: (Math.random() - 0.5) * 0.3 },
+  });
+}
+
+// Hero nodes start positions (scattered)
+const heroStart = [
+  { x: W * 0.15, y: H * 0.2 },
+  { x: W * 0.85, y: H * 0.75 },
+  { x: W * 0.1,  y: H * 0.8 },
+  { x: W * 0.6,  y: H * 0.15 },
+];
+
+function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+let time = 0;
+
+function draw(ts) {
+  time += 0.008 * speed;
+  t = (Math.sin(time * 0.5) + 1) / 2; // oscillate 0↔1
+
+  // Phase progress
+  const p0 = clamp(t / 0.33, 0, 1);        // phase 1: 0→0.33
+  const p1 = clamp((t - 0.33) / 0.33, 0, 1); // phase 2: 0.33→0.66
+  const p2 = clamp((t - 0.66) / 0.34, 0, 1); // phase 3: 0.66→1
+
+  // Update phase bars
+  document.getElementById('bar0').style.width = (p0 * 100) + '%';
+  document.getElementById('bar1').style.width = (p1 * 100) + '%';
+  document.getElementById('bar2').style.width = (p2 * 100) + '%';
+
+  // Ghost opacity
+  const ghostOpacity = clamp(1 - easeInOut(clamp((t - 0.25) / 0.35, 0, 1)), 0, 1);
+
+  // Hero node positions (lerp from start to logo)
+  const heroEase = easeInOut(clamp(t / 0.85, 0, 1));
+  const heroes = LOGO_NODES.map((target, i) => ({
+    x: lerp(heroStart[i].x, target.x, heroEase),
+    y: lerp(heroStart[i].y, target.y, heroEase),
+    r: lerp(3, target.r, heroEase),
+    opacity: 1,
+  }));
+
+  // Clear
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  const allNodes = [
+    ...ghosts.map(g => ({
+      x: g.x + Math.sin(time * g.speed + g.phase) * 8,
+      y: g.y + Math.cos(time * g.speed + g.phase * 1.3) * 6,
+      r: g.r,
+      opacity: ghostOpacity,
+    })),
+    ...heroes,
+  ];
+
+  // Draw ghost lines (proximity)
+  if (ghostOpacity > 0.01) {
+    for (let i = 0; i < ghosts.length; i++) {
+      for (let j = i + 1; j < ghosts.length; j++) {
+        const a = allNodes[i], b = allNodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 130) {
+          const alpha = ghostOpacity * (1 - dist / 130) * 0.35;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+          ctx.lineWidth = 0.8;
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Draw logo lines (emerging)
+  const logoLineOpacity = easeInOut(clamp((t - 0.5) / 0.4, 0, 1));
+  if (logoLineOpacity > 0.01) {
+    LOGO_LINES.forEach(([ai, bi]) => {
+      const a = heroes[ai], b = heroes[bi];
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${logoLineOpacity * 0.9})`;
+      ctx.lineWidth = lerp(0.5, 1.5, logoLineOpacity);
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    });
+  }
+
+  // Draw ghost nodes
+  allNodes.slice(0, ghosts.length).forEach(n => {
+    if (n.opacity < 0.01) return;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${n.opacity * 0.75})`;
+    ctx.fill();
+  });
+
+  // Draw hero nodes
+  heroes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${n.opacity})`;
+    ctx.fill();
+  });
+
+  // Logo text reveal (phase 3)
+  if (p2 > 0.5) {
+    const textOpacity = easeInOut(clamp((p2 - 0.5) / 0.5, 0, 1));
+    const scale = lerp(1.4, 1.0, easeInOut(p2));
+    const centerX = LOGO_CENTER_X;
+    const centerY = LOGO_CENTER_Y;
+
+    ctx.save();
+    ctx.globalAlpha = textOpacity;
+    ctx.translate(centerX, centerY + 95 * scale);
+    ctx.font = `${Math.round(22 * scale)}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+    ctx.fontWeight = '600';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '0.05em';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('unickeys', 0, 0);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

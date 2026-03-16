@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unickeys — Animation v7</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+
+  /* Nav */
+  .nav { position: fixed; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; padding: 0 48px; border-bottom: 1px solid rgba(255,255,255,0.08); justify-content: space-between; z-index: 10; background: #000; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; }
+  .nav-btns { display: flex; align-items: center; gap: 10px; }
+  .nav-btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; border: none; }
+  .nav-btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); }
+  .nav-btn.solid { background: #fff; color: #000; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+  /* Layout */
+  .page { display: flex; align-items: center; height: 100vh; padding: 64px 48px 160px; gap: 48px; }
+
+  /* Left — CTA */
+  .hero-left { flex: 1; display: flex; flex-direction: column; gap: 24px; animation: fadein 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); width: fit-content; }
+  .hero-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.4); }
+  .hero-title { font-size: clamp(40px, 5.5vw, 72px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+  .hero-desc { font-size: 15px; color: rgba(255,255,255,0.4); line-height: 1.65; max-width: 440px; }
+  .hero-features { display: flex; flex-direction: column; gap: 10px; }
+  .hero-feature { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.5); }
+  .hero-feature-icon { width: 18px; height: 18px; border-radius: 4px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hero-actions { display: flex; align-items: center; gap: 12px; }
+  .hero-trust { font-size: 11px; color: rgba(255,255,255,0.22); display: flex; align-items: center; gap: 6px; }
+  .hero-trust-sep { width: 1px; height: 10px; background: rgba(255,255,255,0.15); }
+
+  .btn-primary { padding: 11px 22px; border-radius: 6px; font-size: 14px; font-weight: 500; background: #fff; color: #000; cursor: pointer; border: none; display: flex; align-items: center; gap: 8px; transition: background 0.15s; white-space: nowrap; }
+  .btn-primary:hover { background: rgba(255,255,255,0.88); }
+  .btn-ghost { padding: 11px 18px; border-radius: 6px; font-size: 14px; font-weight: 500; background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.13); transition: all 0.15s; white-space: nowrap; }
+  .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.35); }
+
+  /* Marquee */
+  .marquee-wrap { position: fixed; bottom: 0; left: 0; right: 0; padding: 18px 0; border-top: 1px solid rgba(255,255,255,0.06); background: #000; z-index: 5; overflow: hidden; }
+  .marquee-label { position: absolute; left: 0; top: 0; bottom: 0; width: 120px; display: flex; align-items: center; padding-left: 48px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); background: linear-gradient(to right, #000 60%, transparent); z-index: 2; white-space: nowrap; }
+  .marquee-track { display: flex; gap: 0; width: max-content; animation: marquee 28s linear infinite; }
+  .marquee-track:hover { animation-play-state: paused; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee-item { display: flex; align-items: center; gap: 8px; padding: 0 40px; border-right: 1px solid rgba(255,255,255,0.06); white-space: nowrap; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.25); letter-spacing: 0.01em; transition: color 0.2s; }
+  .marquee-item:hover { color: rgba(255,255,255,0.55); }
+  .marquee-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+
+  /* Right — Canvas box */
+  .hero-right { flex: 1.1; height: calc(100vh - 64px - 96px); max-height: 820px; position: relative; overflow: hidden; animation: fadein 0.9s 0.1s cubic-bezier(0.16,1,0.3,1) both; margin-top: 90px; }
+  canvas { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-logo">
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none">
+      <path d="M100 100V42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L148 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 100L52 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M100 114C107.732 114 114 107.732 114 100C114 92.268 107.732 86 100 86C92.268 86 86 92.268 86 100C86 107.732 92.268 114 100 114Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M100 50C104.418 50 108 46.4183 108 42C108 37.5817 104.418 34 100 34C95.5817 34 92 37.5817 92 42C92 46.4183 95.5817 50 100 50Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M148 136C152.418 136 156 132.418 156 128C156 123.582 152.418 120 148 120C143.582 120 140 123.582 140 128C140 132.418 143.582 136 148 136Z" fill="white" stroke="white" stroke-width="4.5"/>
+      <path d="M52 136C56.4183 136 60 132.418 60 128C60 123.582 56.4183 120 52 120C47.5817 120 44 123.582 44 128C44 132.418 47.5817 136 52 136Z" fill="white" stroke="white" stroke-width="4.5"/>
+    </svg>
+    unickeys
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn solid">
+      Empezar ahora
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+    </button>
+    <button class="nav-btn ghost">Iniciar sesión</button>
+  </div>
+</div>
+
+<div class="page">
+  <!-- Left: CTA -->
+  <div class="hero-left">
+    <h1 class="hero-title">Certifica lo que<br>importa.</h1>
+    <p class="hero-desc">Emití certificados técnicos verificables respaldados por blockchain. Anti-fraude, legalmente válidos.</p>
+    <div class="hero-features">
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+        Hash SHA-256 + Merkle Tree en Solana
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+        Verificación pública sin cuenta
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+        API para integrar en tu plataforma
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-primary">
+        Empezar ahora
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+      </button>
+      <button class="btn-ghost">¿Cómo funciona?</button>
+    </div>
+  </div>
+
+  <!-- Right: nodes canvas -->
+  <div class="hero-right">
+    <canvas id="c"></canvas>
+  </div>
+</div>
+
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W, H, DPR = 1;
+
+const NODE_COUNT     = 320;
+const LINE_DIST      = 100;
+const LOGO_SCALE     = 0.52;
+const CLUSTER_SIZE   = 22;   // nodos por punto del logo
+const CLUSTER_RADIUS = 22;   // dispersión orbital del cluster
+
+let ghosts = [], logoTargets = [], clusters = [], textClusters = [];
+
+function buildNodes() {
+  const cx = W * 0.52;
+  const cy = H * 0.38;
+  const sc = Math.min(W, H) * LOGO_SCALE;
+
+  function lp(lx, ly) {
+    return { x: cx + (lx-100)/100*sc*0.56, y: cy + (ly-100)/100*sc*0.56 };
+  }
+
+  logoTargets = [
+    { ...lp(100, 42)  },  // top
+    { ...lp(148, 128) },  // br
+    { ...lp(52,  128) },  // bl
+    { ...lp(100, 100) },  // center
+  ];
+
+  // Nodos de cluster: orbitan alrededor de cada punto del logo con física spring
+  clusters = [];
+  logoTargets.forEach((t, ti) => {
+    for (let s = 0; s < CLUSTER_SIZE; s++) {
+      const angle  = (s / CLUSTER_SIZE) * Math.PI * 2;
+      const spread = CLUSTER_RADIUS * (0.3 + Math.random() * 0.7);
+      clusters.push({
+        targetIdx: ti,
+        x: t.x + Math.cos(angle) * spread,
+        y: t.y + Math.sin(angle) * spread,
+        vx: 0, vy: 0,
+        orbitAngle: angle + Math.random() * 0.8,
+        orbitR: spread * (0.5 + Math.random() * 0.8),
+        orbitFreq: 0.06 + Math.random() * 0.10,
+        r:  0.8 + Math.random() * 1.6,
+        brightness: 0.55 + Math.random() * 0.40,
+      });
+    }
+  });
+
+  // Nodos de fondo — distribución orgánica con clusters naturales
+  ghosts = [];
+  const attempts = NODE_COUNT * 12;
+  const minDist  = Math.sqrt((W * H) / NODE_COUNT) * 0.55;
+
+  for (let i = 0; i < attempts && ghosts.length < NODE_COUNT; i++) {
+    // Distribución con leve tendencia a los bordes (más natural, menos centro denso)
+    const bx = Math.random() * W;
+    const by = Math.random() * H;
+    // Mínima distancia entre nodos para evitar clusters perfectos
+    let tooClose = false;
+    for (let j = ghosts.length - 1; j >= Math.max(0, ghosts.length - 12); j--) {
+      const dx = bx - ghosts[j].bx, dy = by - ghosts[j].by;
+      if (dx*dx + dy*dy < minDist*minDist) { tooClose = true; break; }
+    }
+    if (tooClose) continue;
+    const g = {
+      bx, by,
+      r:  0.5 + Math.pow(Math.random(), 1.5) * 1.6,
+      waveAmp:  3 + Math.random()*10,
+      waveFreq: 0.28 + Math.random()*0.45,
+      brightness: 0.18 + Math.pow(Math.random(), 0.8) * 0.42,
+      ox: 0, oy: 0,
+    };
+    g.wavePhaseX = Math.random() * Math.PI * 2;
+    g.wavePhaseY = Math.random() * Math.PI * 2;
+    ghosts.push(g);
+  }
+
+  buildTextNodes();
+}
+
+function buildTextNodes() {
+  const sc        = Math.min(W, H) * LOGO_SCALE;
+  const logoBot   = H * 0.5 + (128-100)/100 * sc * 0.56;
+  const fontSize  = Math.round(Math.min(W, H) * 0.255);
+  const textCY    = logoBot + fontSize * 0.55;
+  const STEP      = 6;
+
+  // Render text a un canvas offscreen para samplear los píxeles
+  const oc    = document.createElement('canvas');
+  oc.width    = W;
+  oc.height   = fontSize * 3;
+  const octx  = oc.getContext('2d');
+  octx.fillStyle    = '#fff';
+  octx.font         = `500 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+  octx.letterSpacing = `${Math.round(fontSize * 0.08)}px`;
+  octx.textAlign    = 'center';
+  octx.textBaseline = 'middle';
+  octx.fillText('unickeys', W / 2, oc.height / 2);
+
+  const data = octx.getImageData(0, 0, oc.width, oc.height).data;
+  const pts  = [];
+  for (let py = 0; py < oc.height; py += STEP) {
+    for (let px = 0; px < oc.width; px += STEP) {
+      if (data[(py * oc.width + px) * 4 + 3] > 80) {
+        pts.push({ x: px, y: py - oc.height / 2 + textCY });
+      }
+    }
+  }
+  // Limitar a ~350 nodos aleatoriamente
+  while (pts.length > 700) pts.splice(Math.floor(Math.random() * pts.length), 1);
+
+  textClusters = pts.map(t => ({
+    targetX: t.x,  targetY: t.y,
+    x: t.x + (Math.random() - 0.5) * W * 0.5,
+    y: t.y + (Math.random() - 0.5) * H * 0.3,
+    vx: 0, vy: 0,
+    r:  0.7 + Math.random() * 1.1,
+    brightness: 0.55 + Math.random() * 0.40,
+    orbitR:   2.5 + Math.random() * 4.0,
+    orbitFreq: 0.05 + Math.random() * 0.09,
+    orbitAngle: Math.random() * Math.PI * 2,
+  }));
+}
+
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp  = (a,b,t) => a + (b-a)*t;
+
+let mouse = { x: -9999, y: -9999 };
+const MOUSE_RADIUS  = 140;
+const MOUSE_ATTRACT = 38;
+const REPEL_RADIUS  = 120;
+const REPEL_FORCE   = 130;
+const SPRING        = 0.022;  // retorno muy suave
+const DAMPING       = 0.91;   // alta amortiguación = muy smooth
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+});
+canvas.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+let time = 0;
+
+function draw() {
+  time += 0.016;
+
+  ctx.save();
+  ctx.scale(DPR, DPR);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Nodos de fondo con atracción al mouse
+  const gPos = ghosts.map(g => {
+    const wx = g.bx + Math.sin(time*g.waveFreq + g.wavePhaseX)*g.waveAmp;
+    const wy = g.by + Math.cos(time*g.waveFreq*0.8 + g.wavePhaseY)*g.waveAmp*0.7;
+    const dx = mouse.x-wx, dy = mouse.y-wy;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    const pull = dist < MOUSE_RADIUS ? (1-dist/MOUSE_RADIUS)*MOUSE_ATTRACT : 0;
+    g.ox = lerp(g.ox, dist>0?(dx/dist)*pull:0, 0.025);
+    g.oy = lerp(g.oy, dist>0?(dy/dist)*pull:0, 0.025);
+    const near = Math.max(0, 1-dist/MOUSE_RADIUS);
+    return { x: wx+g.ox, y: wy+g.oy, r: g.r+near*0.8, brightness: g.brightness+near*0.3 };
+  });
+
+  // ── Cluster nodes: spring hacia su target + deriva orbital + repulsión del cursor
+  const cPos = clusters.map(c => {
+    const target = logoTargets[c.targetIdx];
+    // posición de descanso = target + pequeña órbita
+    const restX = target.x + Math.cos(time*c.orbitFreq + c.orbitAngle)*c.orbitR;
+    const restY = target.y + Math.sin(time*c.orbitFreq + c.orbitAngle)*c.orbitR*0.65;
+    // spring hacia rest
+    c.vx += (restX - c.x) * SPRING;
+    c.vy += (restY - c.y) * SPRING;
+    // repulsión cursor
+    const dx = c.x - mouse.x, dy = c.y - mouse.y;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if (dist < REPEL_RADIUS && dist > 0) {
+      const f = (1-dist/REPEL_RADIUS)*REPEL_FORCE;
+      c.vx += (dx/dist)*f*0.07;
+      c.vy += (dy/dist)*f*0.07;
+    }
+    c.vx *= DAMPING; c.vy *= DAMPING;
+    c.x  += c.vx;   c.y  += c.vy;
+    return c;
+  });
+
+  // Centro de cada grupo de cluster (para las líneas del logo)
+  const centers = logoTargets.map((_, ti) => {
+    const pts = cPos.filter(c => c.targetIdx === ti);
+    return { x: pts.reduce((s,c)=>s+c.x,0)/pts.length, y: pts.reduce((s,c)=>s+c.y,0)/pts.length };
+  });
+
+  // ── Ghost lines
+  for (let i = 0; i < gPos.length-1; i++) {
+    for (let j = i+1; j < gPos.length; j++) {
+      const a=gPos[i], b=gPos[j], dx=a.x-b.x, dy=a.y-b.y, d2=dx*dx+dy*dy;
+      if (d2 < LINE_DIST*LINE_DIST) {
+        const d = Math.sqrt(d2);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(255,255,255,${(1-d/LINE_DIST)*0.16})`;
+        ctx.lineWidth = 0.5;
+        ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      }
+    }
+  }
+
+  // ── Líneas del logo entre centros de clusters
+  [[3,0],[3,1],[3,2]].forEach(([ai,bi]) => {
+    const a=centers[ai], b=centers[bi];
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(255,255,255,0.40)`;
+    ctx.lineWidth = 0.9;
+    ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  });
+
+  // ── Ghost dots
+  gPos.forEach(g => {
+    ctx.beginPath(); ctx.arc(g.x,g.y,g.r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${g.brightness*0.7})`; ctx.fill();
+  });
+
+  // ── Cluster dots (iguales a los de fondo pero más brillantes)
+  cPos.forEach(c => {
+    ctx.beginPath(); ctx.arc(c.x,c.y,c.r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${c.brightness})`; ctx.fill();
+  });
+
+  // ── Text clusters: física igual que logo clusters
+  textClusters.forEach(c => {
+    const restX = c.targetX + Math.cos(time*c.orbitFreq + c.orbitAngle)*c.orbitR;
+    const restY = c.targetY + Math.sin(time*c.orbitFreq + c.orbitAngle)*c.orbitR*0.65;
+    c.vx += (restX - c.x) * SPRING;
+    c.vy += (restY - c.y) * SPRING;
+    const dx = c.x - mouse.x, dy = c.y - mouse.y;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if (dist < REPEL_RADIUS && dist > 0) {
+      const f = (1-dist/REPEL_RADIUS)*REPEL_FORCE;
+      c.vx += (dx/dist)*f*0.07;
+      c.vy += (dy/dist)*f*0.07;
+    }
+    c.vx *= DAMPING; c.vy *= DAMPING;
+    c.x  += c.vx;   c.y  += c.vy;
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${c.brightness})`; ctx.fill();
+  });
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  DPR = window.devicePixelRatio || 1;
+  W = rect.width;
+  H = rect.height;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  buildNodes();
+}
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
