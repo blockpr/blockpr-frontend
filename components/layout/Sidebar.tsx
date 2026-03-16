@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { SettingsModal, type SettingsSection } from '@/components/layout/settings/SettingsModal'
 import { useThemeStore } from '@/stores/themeStore'
+import { authApi } from '@/lib/api'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import UserAvatar from './UserAvatar'
 
@@ -52,6 +53,9 @@ export function Sidebar() {
   const { theme } = useThemeStore()
   const logoColor = theme === 'light' ? '#1a1a22' : '#ffffff'
 
+  const [companyName, setCompanyName] = useState<string | null>(null)
+  const [companyEmail, setCompanyEmail] = useState<string | null>(null)
+
   const [collapsed, setCollapsed] = useState(false)
   const [settingsSection, setSettingsSection] = useState<SettingsSection | null>(null)
 
@@ -96,6 +100,28 @@ export function Sidebar() {
     aside.addEventListener('transitionend', onEnd)
     return () => aside.removeEventListener('transitionend', onEnd)
   }, [collapsed])
+
+  // Company info (backend session) for the footer user card
+  useEffect(() => {
+    let cancelled = false
+    authApi
+      .me()
+      .then((res) => {
+        if (cancelled) return
+        setCompanyName(res?.user?.company_name ?? null)
+        setCompanyEmail(res?.user?.email ?? null)
+      })
+      .catch(() => {
+        // Si no hay sesión activa o falla la API, usamos fallback (next-auth) abajo
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const footerPrimaryText = companyName ?? session?.user?.name ?? 'Empresa'
+  const footerSecondaryText = companyEmail ?? session?.user?.email ?? ''
 
   return (
     <>
@@ -150,11 +176,11 @@ export function Sidebar() {
             {/* Avatar */}
             <div className="flex justify-center pb-4">
               <button
-                title={session?.user?.name ?? 'Perfil'}
+                title={footerPrimaryText ?? 'Perfil'}
                 className="w-9 h-9 rounded-full overflow-hidden hover:ring-2 hover:ring-[var(--color-border)] transition-all"
                 onClick={e => e.stopPropagation()}
               >
-                <UserAvatar name={session?.user?.name} image={session?.user?.image} />
+                <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
               </button>
             </div>
           </div>
@@ -227,13 +253,13 @@ export function Sidebar() {
                 onClick={() => setSettingsSection('perfil')}
                 className="w-full flex items-center gap-3 px-3 py-5 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left rounded-[6px]"
               >
-                <UserAvatar name={session?.user?.name} image={session?.user?.image} />
+                <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--color-text-primary)] truncate leading-none mb-1">
-                    {session?.user?.name ?? 'Usuario'}
+                    {footerPrimaryText}
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)] truncate leading-none">
-                    {session?.user?.email ?? ''}
+                    {footerSecondaryText}
                   </p>
                 </div>
                 <svg className="w-3.5 h-3.5 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
