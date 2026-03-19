@@ -71,7 +71,6 @@ export default function SeguridadContent() {
     setUserSessionsLoading(true)
     getUserSessions()
       .then((data) => {
-        console.log(data)
         setUserSessions(data)
       })
       .catch(() => setUserSessions([]))
@@ -160,8 +159,7 @@ export default function SeguridadContent() {
                 {userSessions.map((s) => {
                   const name = (s.device_name ?? '').toLowerCase()
                   const specs = (s.device_specs ?? '').toLowerCase()
-                  const actionLower = (s.action ?? '').toLowerCase()
-                  const isCurrent = actionLower.includes('login')
+                  const isCurrent = s.is_opened ?? false
 
                   const icon =
                     name.includes('iphone') || specs.includes('ios') ? (
@@ -206,11 +204,11 @@ export default function SeguridadContent() {
                           )}
                         </div>
                         <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-                          {s.device_specs ?? 'Sistema operativo'} · {s.action ?? 'sesión'}
+                          {s.device_specs ?? 'Sistema operativo'} · {s.is_opened ? 'Sesión abierta' : 'Sesión cerrada'}
                         </p>
                         <p className="text-[11px] text-[var(--color-text-muted)]">
-                          Último acceso:{' '}
-                          {s.created_at ? new Date(s.created_at).toLocaleString('es-AR') : '—'}
+                          Última actividad:{' '}
+                          {s.updated_at ? new Date(s.updated_at).toLocaleString('es-AR') : '—'}
                         </p>
                       </div>
                     </div>

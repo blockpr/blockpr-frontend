@@ -58,6 +58,7 @@ export interface UserSession {
   user_id?: string | null
   device_name?: string
   device_specs?: string
-  action?: string
+  is_opened?: boolean
   created_at: string
+  updated_at: string
 }
