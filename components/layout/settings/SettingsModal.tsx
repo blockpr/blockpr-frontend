@@ -3,6 +3,8 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
+import { authApi } from '@/lib/api'
+import { getDeviceInfo } from '@/lib/device-utils'
 import SectionContent from './SectionContent'
 
 export type SettingsSection = 'perfil' | 'seguridad' | 'subscripcion' | 'configuracion'
@@ -71,6 +73,13 @@ export function SettingsModal({ initialSection, onClose }: Props) {
     setTimeout(onClose, 300)
   }
 
+  async function handleLogout() {
+    const { device_name, device_specs } = getDeviceInfo()
+    try { await authApi.logout(device_name, device_specs) } catch { /* silent */ }
+    handleClose()
+    setTimeout(() => signOut({ callbackUrl: '/login' }), 300)
+  }
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape') handleClose()
@@ -124,7 +133,7 @@ export function SettingsModal({ initialSection, onClose }: Props) {
           </div>
           <div className="mx-4 mb-1 h-px bg-[var(--color-border)]" />
           <button
-            onClick={() => { handleClose(); setTimeout(() => signOut({ callbackUrl: '/login' }), 300) }}
+            onClick={handleLogout}
             className="flex items-center gap-2.5 mx-2 px-3 py-2 rounded-lg text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-muted)] transition-colors text-left w-[calc(100%-16px)]"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

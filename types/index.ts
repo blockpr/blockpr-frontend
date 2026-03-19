@@ -52,3 +52,12 @@ export interface PaginatedResponse<T> {
   pageSize: number
   totalPages: number
 }
+
+export interface UserSession {
+  id: string
+  user_id?: string | null
+  device_name?: string
+  device_specs?: string
+  action?: string
+  created_at: string
+}

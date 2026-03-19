@@ -10,6 +10,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { authApi } from '@/lib/api'
+import { getDeviceInfo } from '@/lib/device-utils'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
@@ -88,7 +89,8 @@ export default function LoginPage() {
     setResendSent(false)
     
     try {
-      await authApi.login(data.email, data.password)
+      const { device_name, device_specs } = getDeviceInfo()
+      await authApi.login(data.email, data.password, device_name, device_specs)
       router.push('/dashboard')
       router.refresh()
     } catch (error: any) {

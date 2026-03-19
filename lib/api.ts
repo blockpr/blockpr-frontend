@@ -123,10 +123,10 @@ export interface MeResponse {
 }
 
 export const authApi = {
-  login: (email: string, password: string) =>
+  login: (email: string, password: string, device_name?: string, device_specs?: string) =>
     apiFetch<LoginResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, device_name, device_specs, action: 'login' }),
     }),
 
   register: (payload: RegisterPayload) =>
@@ -165,9 +165,10 @@ export const authApi = {
       body: JSON.stringify({ refresh_token }),
     }),
 
-  logout: () =>
+  logout: (device_name?: string, device_specs?: string) =>
     apiFetch('/auth/logout', {
       method: 'POST',
+      body: JSON.stringify({ device_name, device_specs, action: 'logout' }),
     }),
 
   me: () =>

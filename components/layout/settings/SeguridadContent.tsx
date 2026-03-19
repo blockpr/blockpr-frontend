@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from "react"
+import { getUserSessions } from "@/lib/server-user-sessions"
+import { UserSession } from "@/types"
+import { useEffect, useState } from "react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -14,7 +16,9 @@ export default function SeguridadContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-
+  const [userSessions, setUserSessions] = useState<UserSession[]>([])
+  const [userSessionsLoading, setUserSessionsLoading] = useState(false)
+  const [sessionsLoaded, setSessionsLoaded] = useState(false)
   async function handleChangePassword() {
     if (loading) return
 
@@ -62,7 +66,20 @@ export default function SeguridadContent() {
       setLoading(false)
     }
   }
-
+  useEffect(() => {
+    if (sessionsLoaded) return
+    setUserSessionsLoading(true)
+    getUserSessions()
+      .then((data) => {
+        console.log(data)
+        setUserSessions(data)
+      })
+      .catch(() => setUserSessions([]))
+      .finally(() => {
+        setUserSessionsLoading(false)
+        setSessionsLoaded(true)
+      })
+  }, [sessionsLoaded])
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -133,70 +150,75 @@ export default function SeguridadContent() {
           Dispositivos conectados
         </p>
         <div className="space-y-2">
-          {[
-            {
-              name: 'MacBook Pro',
-              os: 'macOS 15 · Safari 18',
-              location: 'Buenos Aires, Argentina',
-              lastSeen: 'Ahora',
-              current: true,
-              icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
-                </svg>
-              ),
-            },
-            {
-              name: 'iPhone 16 Pro',
-              os: 'iOS 18 · Chrome 131',
-              location: 'Buenos Aires, Argentina',
-              lastSeen: 'Hace 2 horas',
-              current: false,
-              icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 15.75h3" />
-                </svg>
-              ),
-            },
-            {
-              name: 'Windows PC',
-              os: 'Windows 11 · Edge 131',
-              location: 'Córdoba, Argentina',
-              lastSeen: 'Hace 5 días',
-              current: false,
-              icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
-                </svg>
-              ),
-            },
-          ].map((device) => (
-            <div
-              key={device.name}
-              className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]"
-            >
-              <div className="text-[var(--color-text-muted)] shrink-0">
-                {device.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-[var(--color-text-primary)]">{device.name}</p>
-                  {device.current && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-success-muted)] text-[var(--color-success)] font-medium">
-                      Este dispositivo
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{device.os} · {device.location}</p>
-                <p className="text-[11px] text-[var(--color-text-muted)]">Último acceso: {device.lastSeen}</p>
-              </div>
-              {!device.current && (
-                <button className="shrink-0 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors">
-                  Cerrar
-                </button>
-              )}
-            </div>
-          ))}
+          {userSessionsLoading ? (
+            <div className="text-xs text-[var(--color-text-muted)]">Cargando sesiones…</div>
+          ) : (
+            userSessions.length === 0 ? (
+              <div className="text-xs text-[var(--color-text-muted)]">No hay sesiones registradas.</div>
+            ) : (
+              <>
+                {userSessions.map((s) => {
+                  const name = (s.device_name ?? '').toLowerCase()
+                  const specs = (s.device_specs ?? '').toLowerCase()
+                  const actionLower = (s.action ?? '').toLowerCase()
+                  const isCurrent = actionLower.includes('login')
+
+                  const icon =
+                    name.includes('iphone') || specs.includes('ios') ? (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 15.75h3"
+                        />
+                      </svg>
+                    ) : name.includes('mac') || specs.includes('mac') ? (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"
+                        />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"
+                        />
+                      </svg>
+                    )
+
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]"
+                    >
+                      <div className="text-[var(--color-text-muted)] shrink-0">{icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-medium text-[var(--color-text-primary)]">{s.device_name ?? 'Dispositivo'}</p>
+                          {isCurrent && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-success-muted)] text-[var(--color-success)] font-medium">
+                              Este dispositivo
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                          {s.device_specs ?? 'Sistema operativo'} · {s.action ?? 'sesión'}
+                        </p>
+                        <p className="text-[11px] text-[var(--color-text-muted)]">
+                          Último acceso:{' '}
+                          {s.created_at ? new Date(s.created_at).toLocaleString('es-AR') : '—'}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )
+          )}
         </div>
       </div>
     </div>
