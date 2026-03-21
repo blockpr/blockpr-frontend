@@ -1,3 +1,5 @@
+'use client'
+
 import type { Emission } from '@/types'
 import { CompanyAvatar } from './CompanyAvatar'
 
@@ -39,9 +41,35 @@ const value: React.CSSProperties = {
   lineHeight: 1.4,
 }
 
+const btnOutline: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '8px 14px',
+  borderRadius: 8,
+  border: '1px solid rgba(255,255,255,0.14)',
+  fontSize: 12,
+  fontWeight: 500,
+  color: 'rgba(255,255,255,0.75)',
+  textDecoration: 'none',
+  background: 'transparent',
+  cursor: 'pointer',
+}
+
+const btnPrimary: React.CSSProperties = {
+  ...btnOutline,
+  border: '1px solid rgba(61,214,92,0.35)',
+  background: 'rgba(61,214,92,0.12)',
+  color: '#3dd65c',
+}
+
 export function VerifyDataGrid({ emission }: VerifyDataGridProps) {
   const isVerified = emission.status === 'verified'
   const documentLabel = emission.documentName ?? emission.id
+  const issuerName = emission.company ?? '?'
+  const txHref =
+    emission.txExplorerUrl ??
+    (emission.txHash ? `https://explorer.solana.com/tx/${emission.txHash}` : undefined)
 
   return (
     <>
@@ -56,10 +84,10 @@ export function VerifyDataGrid({ emission }: VerifyDataGridProps) {
         <div style={{ ...cell, gridColumn: '1 / -1' }}>
           <div style={label}>Empresa emisora</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <CompanyAvatar name={emission.company ?? '?'} />
+            <CompanyAvatar name={issuerName} />
             <div>
               <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
-                {emission.company}
+                {issuerName}
               </div>
             </div>
           </div>
@@ -77,13 +105,65 @@ export function VerifyDataGrid({ emission }: VerifyDataGridProps) {
           <div style={value}>{formatDate(emission.date)}</div>
         </div>
 
-        {/* Confirmado on-chain — solo en verified si existe */}
-        {isVerified && emission.blockchainConfirmedAt && (
-          <div style={cell}>
-            <div style={label}>Confirmado on-chain</div>
-            <div style={value}>{formatDate(emission.blockchainConfirmedAt)}</div>
+        {/* Confirmado on-chain + transacción (misma fila) */}
+        <div style={{ ...cell, gridColumn: '1 / -1' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 16,
+            }}
+          >
+            <div style={{ minWidth: 0, flex: '1 1 200px' }}>
+              <div style={label}>{isVerified ? 'Confirmado on-chain' : 'Estado on-chain'}</div>
+              <div style={value}>
+                {isVerified && emission.blockchainConfirmedAt
+                  ? formatDate(emission.blockchainConfirmedAt)
+                  : isVerified
+                    ? '—'
+                    : 'Pendiente de confirmación'}
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: 8,
+                flexShrink: 0,
+              }}
+            >
+              {emission.txHash && txHref ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+                  <a href={txHref} target="_blank" rel="noopener noreferrer" style={btnOutline}>
+                    Abrir link
+                  </a>
+                  <button
+                    type="button"
+                    style={btnPrimary}
+                    onClick={() => void navigator.clipboard.writeText(txHref)}
+                  >
+                    Copiar link
+                  </button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    color: 'rgba(255,255,255,0.2)',
+                    fontStyle: 'italic',
+                    fontSize: 12,
+                    textAlign: 'right',
+                    maxWidth: 220,
+                  }}
+                >
+                  Sin transacción aún — en proceso
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
 
         {/* Hash SHA-256 — ancho completo */}
         <div style={{ ...cell, gridColumn: '1 / -1' }}>
@@ -99,54 +179,6 @@ export function VerifyDataGrid({ emission }: VerifyDataGridProps) {
           >
             {emission.hash}
           </div>
-        </div>
-
-        {/* TX Blockchain — ancho completo */}
-        <div style={{ ...cell, gridColumn: '1 / -1' }}>
-          <div style={label}>Transacción blockchain</div>
-          {isVerified && emission.txHash ? (
-            <a
-              href={`https://explorer.solana.com/tx/${emission.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: 'rgba(100,180,255,0.8)',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 12,
-                fontFamily: "'SF Mono', 'Fira Code', monospace",
-              }}
-            >
-              {emission.txHash}
-              <svg
-                width="12"
-                height="12"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                style={{ flexShrink: 0 }}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                />
-              </svg>
-            </a>
-          ) : (
-            <div
-              style={{
-                color: 'rgba(255,255,255,0.2)',
-                fontStyle: 'italic',
-                fontSize: 12,
-              }}
-            >
-              Sin transacción aún — en proceso
-            </div>
-          )}
         </div>
       </div>
 

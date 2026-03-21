@@ -3,7 +3,11 @@ import { cn } from '@/lib/utils'
 
 interface BlockchainTxLinkProps {
   txHash: string
+  /** Si viene del backend (p. ej. explorer_url), se usa en lugar del explorador por defecto */
+  href?: string
   network?: 'solana'
+  /** false = firma completa con salto de línea (p. ej. detalle a ancho completo) */
+  truncate?: boolean
   className?: string
 }
 
@@ -13,11 +17,14 @@ const explorers: Record<string, string> = {
 
 export function BlockchainTxLink({
   txHash,
+  href: hrefProp,
   network = 'solana',
+  truncate = true,
   className,
 }: BlockchainTxLinkProps) {
   const baseUrl = explorers[network]
-  const href = `${baseUrl}/${txHash}`
+  const href = hrefProp ?? `${baseUrl}/${txHash}`
+  const label = truncate ? truncateHash(txHash) : txHash
 
   return (
     <a
@@ -29,7 +36,7 @@ export function BlockchainTxLink({
         className
       )}
     >
-      {truncateHash(txHash)}
+      {label}
       <svg
         className="w-3 h-3 opacity-70"
         fill="none"

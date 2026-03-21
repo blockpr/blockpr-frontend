@@ -13,6 +13,8 @@ export interface Emission {
   blockchainName?: string
   blockchainConfirmedAt?: string
   company?: string
+  /** URL completa al explorador de la transacción (si el backend la provee) */
+  txExplorerUrl?: string
   merkleProof?: string[]
   blockNumber?: number
 }

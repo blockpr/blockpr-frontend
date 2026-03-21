@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
-import { getMockEmission } from '@/lib/mocks/emissions'
+import { fetchPublicCertificate, mapPublicPayloadToEmission } from '@/lib/publicCertificate'
 import { VerifyNavbar } from '@/components/layout/VerifyNavbar'
 import { VerifyBanner } from '@/components/verify/VerifyBanner'
 import { VerifyDataGrid } from '@/components/verify/VerifyDataGrid'
+import type { Emission } from '@/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -17,10 +18,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function VerifyPage({ params }: Props) {
   const { id } = await params
-  const emission = getMockEmission(id)
 
-  const state =
-    emission === null
+  let emission: Emission | null = null
+  let loadError = false
+
+  try {
+    const payload = await fetchPublicCertificate(id)
+    if (payload) {
+      emission = mapPublicPayloadToEmission(payload)
+    }
+  } catch {
+    loadError = true
+  }
+
+  const state = loadError
+    ? 'failed'
+    : emission === null
       ? 'not_found'
       : emission.status === 'failed'
         ? 'failed'
@@ -28,7 +41,7 @@ export default async function VerifyPage({ params }: Props) {
           ? 'pending'
           : 'verified'
 
-  const showGrid = state === 'verified' || state === 'pending'
+  const showGrid = !loadError && emission !== null && (state === 'verified' || state === 'pending')
 
   return (
     <div style={{ background: '#000', color: '#fff', minHeight: '100vh', fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
@@ -64,6 +77,22 @@ export default async function VerifyPage({ params }: Props) {
             No existe ningún registro con este identificador.
             <br />
             Si creés que es un error, contactá a la empresa emisora del documento.
+          </div>
+        )}
+
+        {state === 'failed' && loadError && (
+          <div
+            style={{
+              marginTop: 16,
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.2)',
+              textAlign: 'center',
+              lineHeight: 1.7,
+            }}
+          >
+            No pudimos conectar con el servicio de verificación.
+            <br />
+            Intentá de nuevo más tarde.
           </div>
         )}
       </div>

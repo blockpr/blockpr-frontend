@@ -8,7 +8,7 @@ import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
 import { BlockchainTxLink } from '@/components/shared/BlockchainTxLink'
 import { certificatesApi } from '@/lib/api'
-import { formatDate } from '@/lib/utils'
+import { buildVerifyUrl, formatDate } from '@/lib/utils'
 import type { Emission, EmissionStatus } from '@/types'
 
 const CERTIFICATES_LIMIT = 100
@@ -20,6 +20,10 @@ function mapBackendStatusToEmissionStatus(status: string | null): EmissionStatus
 }
 
 function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certificatesApi.list>>['data'][number]): Emission {
+  const sig = certificate.blockchain.transaction_signature ?? undefined
+  const txExplorerUrl =
+    certificate.blockchain.explorer_url ?? (sig ? `https://solscan.io/tx/${sig}` : undefined)
+
   return {
     id: certificate.id,
     date: certificate.created_at,
@@ -27,8 +31,9 @@ function mapCertificateToEmission(certificate: Awaited<ReturnType<typeof certifi
     status: mapBackendStatusToEmissionStatus(certificate.blockchain.status),
     documentName: certificate.external_id ?? certificate.certificate_type ?? 'Sin nombre',
     documentType: certificate.certificate_type ?? 'sin_tipo',
-    txHash: certificate.blockchain.transaction_signature ?? undefined,
-    verifyUrl: certificate.blockchain.explorer_url ?? `/verify/${certificate.id}`,
+    txHash: sig,
+    txExplorerUrl,
+    verifyUrl: buildVerifyUrl(certificate.id),
     blockchainName: certificate.blockchain.blockchain ?? undefined,
     blockchainNetwork: certificate.blockchain.network ?? undefined,
     blockchainConfirmedAt: certificate.blockchain.confirmed_at ?? undefined,
@@ -127,15 +132,24 @@ export default function EmissionDetailPage() {
             {/* Hash */}
             <div className="flex gap-4 py-4">
               <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
-              <div className="flex-1 space-y-2">
-                <div className={`h-3.5 w-full max-w-sm ${sk}`} />
+              <div className="flex-1 space-y-2 min-w-0">
+                <div className={`h-3.5 w-full ${sk}`} />
                 <div className={`h-3 w-40 ${sk}`} />
               </div>
             </div>
-            {/* TX */}
-            <div className="flex gap-4 py-4">
-              <div className={`h-3.5 w-32 shrink-0 ${sk}`} />
-              <div className={`h-3.5 w-52 ${sk}`} />
+          </div>
+          <div className="px-6 pb-6 w-full min-w-0 border-t border-[var(--color-border)] pt-6 space-y-8">
+            <div className="w-full min-w-0 space-y-3">
+              <div className={`h-3.5 w-40 ${sk}`} />
+              <div className={`h-3.5 w-full ${sk}`} />
+              <div className="flex gap-2">
+                <div className={`h-9 w-20 rounded-lg ${sk}`} />
+                <div className={`h-9 w-28 rounded-lg ${sk}`} />
+              </div>
+            </div>
+            <div className="w-full min-w-0 space-y-3 pt-2 border-t border-[var(--color-border)]">
+              <div className={`h-3.5 w-36 ${sk}`} />
+              <div className={`h-3.5 w-44 ${sk}`} />
             </div>
           </div>
         </div>
@@ -224,24 +238,59 @@ export default function EmissionDetailPage() {
               <p className="text-xs text-[var(--color-text-muted)]">Huella digital unica del certificado</p>
             </div>
           </DetailRow>
-          <DetailRow label="Transaccion blockchain">
-            {emission.txHash ? (
-              <div className="space-y-1.5">
-                <BlockchainTxLink txHash={emission.txHash} network="solana" />
-                <p className="text-xs text-[var(--color-text-muted)]">Registrado en {emission.blockchainName ?? 'blockchain'}</p>
+        </dl>
+        <div className="px-6 pb-6 w-full min-w-0 border-t border-[var(--color-border)] pt-6 space-y-8">
+          <div className="w-full min-w-0">
+            <div className="text-sm text-[var(--color-text-muted)] mb-2">Transaccion blockchain</div>
+            {emission.txHash && emission.txExplorerUrl ? (
+              <div className="space-y-3 w-full min-w-0">
+                <BlockchainTxLink
+                  txHash={emission.txHash}
+                  href={emission.txExplorerUrl}
+                  network="solana"
+                  truncate={false}
+                  className="flex w-full min-w-0 flex-wrap items-start gap-1 break-all text-left"
+                />
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  Registrado en {emission.blockchainName ?? 'blockchain'}
+                </p>
+                <div className="flex flex-wrap gap-2 w-full">
+                  <a
+                    href={emission.txExplorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors"
+                  >
+                    Abrir
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(emission.txExplorerUrl!)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-sm text-white hover:bg-[var(--color-accent-hover)] transition-colors"
+                  >
+                    Copiar link
+                  </button>
+                </div>
               </div>
             ) : (
-              <span className="text-[var(--color-text-muted)]">
-                {emission.status === 'pending' ? 'Pendiente de confirmacion en blockchain' : 'No disponible'}
+              <span className="text-sm text-[var(--color-text-muted)]">
+                {emission.status === 'pending'
+                  ? 'Pendiente de confirmacion en blockchain'
+                  : 'No disponible'}
               </span>
             )}
-          </DetailRow>
-          {emission.blockchainConfirmedAt && (
-            <DetailRow label="Confirmado en">
-              {formatDate(emission.blockchainConfirmedAt)}
-            </DetailRow>
-          )}
-        </dl>
+          </div>
+          <div className="w-full min-w-0 pt-2 border-t border-[var(--color-border)]">
+            <div className="text-sm text-[var(--color-text-muted)] mb-2">Confirmado on-chain</div>
+            {emission.blockchainConfirmedAt ? (
+              <p className="text-sm text-[var(--color-text-primary)]">
+                {formatDate(emission.blockchainConfirmedAt)}
+              </p>
+            ) : (
+              <span className="text-sm text-[var(--color-text-muted)]">—</span>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">

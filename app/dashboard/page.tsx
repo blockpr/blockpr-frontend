@@ -3,7 +3,7 @@ import { StatsCard } from '@/components/shared/StatsCard'
 import { EmissionStatusBadge } from '@/components/shared/EmissionStatusBadge'
 import { HashDisplay } from '@/components/shared/HashDisplay'
 import { serverFetch } from '@/lib/server-api'
-import { formatDate } from '@/lib/utils'
+import { buildVerifyUrl, formatDate } from '@/lib/utils'
 import type { CertificatesListResponse } from '@/lib/api'
 import type { Emission, EmissionStatus } from '@/types'
 
@@ -32,7 +32,7 @@ async function fetchAllEmissions(): Promise<Emission[]> {
     hash: c.document_hash,
     status: mapStatus(c.blockchain.status),
     txHash: c.blockchain.transaction_signature ?? undefined,
-    verifyUrl: c.blockchain.explorer_url ?? `/verify/${c.id}`,
+    verifyUrl: buildVerifyUrl(c.id),
   }))
 }
 
