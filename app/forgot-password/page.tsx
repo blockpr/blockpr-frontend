@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
         Ingresá el email de tu cuenta y te enviamos las instrucciones.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div>
           <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
             Email

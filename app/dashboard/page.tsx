@@ -113,7 +113,7 @@ export default async function DashboardPage() {
                 Emisiones recientes
               </h2>
               <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                Últimos certificados procesados
+                Últimos documentos procesados
               </p>
             </div>
             <Link

@@ -239,7 +239,7 @@ export default function ApiKeysClient({ initialKeys }: ApiKeysClientProps) {
         <div>
           <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">API Keys</h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
-            Gestioná las claves de API para integrar BlockPR con tus sistemas
+            Gestioná las claves de API para integrar unickeys con tus sistemas
           </p>
         </div>
         <Button
@@ -309,7 +309,7 @@ export default function ApiKeysClient({ initialKeys }: ApiKeysClientProps) {
           <div className="py-12 text-center">
             <p className="text-sm text-[var(--color-text-secondary)]">No hay API keys creadas</p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              Creá una para integrar BlockPR con tus sistemas
+              Creá una para integrar unickeys con tus sistemas
             </p>
           </div>
         ) : (

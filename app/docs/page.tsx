@@ -148,7 +148,7 @@ export default function DocsPage() {
         {/* Footer */}
         <div className="px-4 py-4 border-t border-[var(--color-border)]">
           <p className="text-[11px] text-[var(--color-text-muted)]">
-            BlockPR API v1.0
+            unickeys API v1.0
           </p>
         </div>
       </aside>

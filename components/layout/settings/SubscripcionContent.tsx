@@ -13,7 +13,7 @@ export default function SubscripcionContent() {
         {/* Uso */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[var(--color-text-secondary)]">Certificados emitidos</span>
+            <span className="text-xs font-medium text-[var(--color-text-secondary)]">Documentos emitidos</span>
             <span className="text-xs text-[var(--color-text-muted)]">1.847 / 5.000</span>
           </div>
           <div className="h-1.5 rounded-full bg-[var(--color-card)] overflow-hidden">

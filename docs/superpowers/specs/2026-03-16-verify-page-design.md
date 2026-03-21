@@ -65,7 +65,7 @@ Grilla 2 columnas:
 
 ### Metadata
 ```ts
-title: `Verificación ${id} — unickeys`  // "unickeys", no "BlockPR"
+title: `Verificación ${id} — unickeys`
 ```
 
 ---

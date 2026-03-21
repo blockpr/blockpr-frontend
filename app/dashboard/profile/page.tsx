@@ -82,7 +82,7 @@ export default function ProfilePage() {
                 {MOCK_COMPANY.tier}
               </p>
               <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                Hasta 2.000 certificados por mes
+                Hasta 2.000 documentos por mes
               </p>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-accent-muted)] text-[var(--color-accent)] border border-[var(--color-accent)]/20">

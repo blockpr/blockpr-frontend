@@ -1,8 +1,9 @@
 'use client'
 
+import { getDeviceInfo } from '@/lib/device-utils'
 import { getUserSessions } from "@/lib/server-user-sessions"
-import { UserSession } from "@/types"
-import { useEffect, useState } from "react"
+import { cn } from '@/lib/utils'
+import { useEffect, useMemo, useState } from "react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -79,6 +80,28 @@ export default function SeguridadContent() {
         setSessionsLoaded(true)
       })
   }, [sessionsLoaded])
+
+  const clientDevice = getDeviceInfo()
+
+  const sortedSessions = useMemo(() => {
+    const dn = clientDevice.device_name.trim()
+    const ds = clientDevice.device_specs.trim()
+    const isThisBrowser = (s: { device_name?: string; device_specs?: string }) =>
+      (s.device_name ?? '').trim() === dn && (s.device_specs ?? '').trim() === ds
+
+    return [...userSessions].sort((a, b) => {
+      const aHere = isThisBrowser(a)
+      const bHere = isThisBrowser(b)
+      if (aHere !== bHere) return aHere ? -1 : 1
+      const ao = a.is_opened ? 1 : 0
+      const bo = b.is_opened ? 1 : 0
+      if (bo !== ao) return bo - ao
+      const at = a.updated_at ? new Date(a.updated_at).getTime() : 0
+      const bt = b.updated_at ? new Date(b.updated_at).getTime() : 0
+      return bt - at
+    })
+  }, [userSessions, clientDevice.device_name, clientDevice.device_specs])
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -156,10 +179,13 @@ export default function SeguridadContent() {
               <div className="text-xs text-[var(--color-text-muted)]">No hay sesiones registradas.</div>
             ) : (
               <>
-                {userSessions.map((s) => {
+                {sortedSessions.map((s) => {
                   const name = (s.device_name ?? '').toLowerCase()
                   const specs = (s.device_specs ?? '').toLowerCase()
-                  const isCurrent = s.is_opened ?? false
+                  const isThisBrowser =
+                    (s.device_name ?? '').trim() === clientDevice.device_name.trim() &&
+                    (s.device_specs ?? '').trim() === clientDevice.device_specs.trim()
+                  const sessionOpen = s.is_opened ?? false
 
                   const icon =
                     name.includes('iphone') || specs.includes('ios') ? (
@@ -191,22 +217,61 @@ export default function SeguridadContent() {
                   return (
                     <div
                       key={s.id}
-                      className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-3 rounded-lg border transition-colors',
+                        sessionOpen
+                          ? 'bg-[var(--color-card)] border-[var(--color-accent)]/45 shadow-[0_0_0_1px_var(--color-accent)]/10'
+                          : 'bg-[var(--color-card)]/70 border-dashed border-[var(--color-border)] opacity-[0.92]',
+                      )}
                     >
-                      <div className="text-[var(--color-text-muted)] shrink-0">{icon}</div>
+                      <div
+                        className={cn(
+                          'shrink-0',
+                          sessionOpen ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] opacity-80',
+                        )}
+                      >
+                        {icon}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-medium text-[var(--color-text-primary)]">{s.device_name ?? 'Dispositivo'}</p>
-                          {isCurrent && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p
+                            className={cn(
+                              'text-xs font-medium',
+                              sessionOpen ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]',
+                            )}
+                          >
+                            {s.device_name ?? 'Dispositivo'}
+                          </p>
+                          {isThisBrowser && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-success-muted)] text-[var(--color-success)] font-medium">
                               Este dispositivo
                             </span>
                           )}
+                          <span
+                            className={cn(
+                              'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
+                              sessionOpen
+                                ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                                : 'bg-[var(--color-border)] text-[var(--color-text-muted)]',
+                            )}
+                          >
+                            {sessionOpen ? 'Sesión abierta' : 'Sesión cerrada'}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-                          {s.device_specs ?? 'Sistema operativo'} · {s.is_opened ? 'Sesión abierta' : 'Sesión cerrada'}
+                        <p
+                          className={cn(
+                            'text-[11px] mt-0.5',
+                            sessionOpen ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]',
+                          )}
+                        >
+                          {s.device_specs ?? 'Sistema operativo'}
                         </p>
-                        <p className="text-[11px] text-[var(--color-text-muted)]">
+                        <p
+                          className={cn(
+                            'text-[11px]',
+                            sessionOpen ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)] opacity-80',
+                          )}
+                        >
                           Última actividad:{' '}
                           {s.updated_at ? new Date(s.updated_at).toLocaleString('es-AR') : '—'}
                         </p>

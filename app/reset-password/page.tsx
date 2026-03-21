@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
         Ingresá tu nueva contraseña para restablecer el acceso.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {serverError && (
           <div className="px-3.5 py-3 rounded-lg bg-[var(--color-danger-muted)] border border-[var(--color-danger)]/20">
             <p className="text-sm text-[var(--color-danger)]">{serverError}</p>

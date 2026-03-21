@@ -1,4 +1,8 @@
 import Link from 'next/link'
+import { UnickeysLogo } from '@/components/brand/UnickeysLogo'
+import { cn } from '@/lib/utils'
+
+export type AuthFormBrand = 'left' | 'center' | 'none'
 
 const features = [
   'Hash SHA-256 único por certificado',
@@ -7,35 +11,35 @@ const features = [
   'Auditoría completa y trazable por lote',
 ]
 
-function BrandLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
-  const iconSize = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8'
-  const svgSize = size === 'sm' ? 'w-4 h-4' : 'w-4.5 h-4.5'
-  const textSize = size === 'sm' ? 'text-base' : 'text-lg'
-
+function BrandLink() {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className={`${iconSize} rounded-[6px] bg-[var(--color-accent)] flex items-center justify-center shrink-0`}>
-        <svg className={`${svgSize} text-white`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-        </svg>
-      </div>
-      <span className={`font-semibold text-[var(--color-text-primary)] ${textSize}`}>BlockPR</span>
-    </div>
+    <Link
+      href="/"
+      className="inline-flex items-center gap-2.5 min-w-0 text-[var(--color-text-primary)]"
+    >
+      <UnickeysLogo className="w-9 h-9" />
+      <span className="font-semibold tracking-tight whitespace-nowrap text-lg">unickeys</span>
+    </Link>
   )
 }
 
-export function AuthLayout({ children }: { children: React.ReactNode }) {
+export function AuthLayout({
+  children,
+  formBrand = 'left',
+}: {
+  children: React.ReactNode
+  /** Marca encima del formulario (panel derecho). */
+  formBrand?: AuthFormBrand
+}) {
   return (
     <div className="flex min-h-screen">
       {/* Panel izquierdo - solo desktop */}
       <div className="hidden lg:flex w-[460px] shrink-0 flex-col justify-between p-12 bg-[var(--color-surface)] border-r border-[var(--color-border)]">
-        <Link href="/">
-          <BrandLogo size="md" />
-        </Link>
+        <BrandLink />
 
         <div>
           <p className="text-[22px] font-semibold text-[var(--color-text-primary)] leading-snug">
-            Certificados técnicos con respaldo criptográfico inmutable
+            Documentos digitales con respaldo criptográfico inmutable
           </p>
           <ul className="mt-8 space-y-3.5">
             {features.map((f) => (
@@ -52,17 +56,23 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <p className="text-xs text-[var(--color-text-muted)]">
-          © {new Date().getFullYear()} BlockPR. Todos los derechos reservados.
+          © {new Date().getFullYear()} unickeys. Todos los derechos reservados.
         </p>
       </div>
 
       {/* Panel derecho - contenido */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-[var(--color-base)] overflow-y-auto">
         <div className="w-full max-w-md">
-          {/* Logo mobile */}
-          <Link href="/" className="lg:hidden inline-block mb-8">
-            <BrandLogo size="sm" />
-          </Link>
+          {formBrand !== 'none' && (
+            <div
+              className={cn(
+                'mb-8',
+                formBrand === 'center' && 'flex justify-center w-full'
+              )}
+            >
+              <BrandLink />
+            </div>
+          )}
 
           {children}
         </div>
