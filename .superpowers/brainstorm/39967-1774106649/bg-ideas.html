@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Background Ideas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050505; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px 32px; }
+
+  h1 { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 40px; line-height: 1.6; }
+
+  .ideas { display: flex; flex-direction: column; gap: 20px; }
+
+  .idea {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+  }
+  .idea:hover { border-color: rgba(255,255,255,0.2); }
+  .idea.selected { border-color: rgba(255,255,255,0.55) !important; }
+
+  .idea-preview {
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    background: #080808;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .idea-info { padding: 24px 28px; display: flex; flex-direction: column; justify-content: center; }
+  .idea-tag { font-family: monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 10px; }
+  .idea-title { font-size: 17px; font-weight: 500; margin-bottom: 10px; color: rgba(255,255,255,0.9); }
+  .idea-desc { font-size: 13px; color: rgba(255,255,255,0.35); line-height: 1.65; margin-bottom: 14px; }
+  .idea-how { font-size: 11px; color: rgba(255,255,255,0.2); line-height: 1.6; font-family: monospace; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; }
+  .idea-how span { color: rgba(255,255,255,0.45); }
+
+  /* ── PREVIEW A: Merkle tree ── */
+  #prev-a canvas { width: 100%; height: 100%; }
+
+  /* ── PREVIEW B: Grid de datos ── */
+  #prev-b { background: #050505; }
+
+  /* ── PREVIEW C: Líneas de señal ── */
+  #prev-c { background: #050505; }
+
+  /* ── PREVIEW D: Partículas caóticas→orden ── */
+  #prev-d { background: #050505; }
+
+  .scroll-label {
+    position: absolute;
+    bottom: 10px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: monospace;
+    font-size: 8px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.1em;
+  }
+  .scroll-bar {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 3px;
+    height: 80px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+  }
+  .scroll-thumb {
+    width: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.25);
+    position: absolute;
+    top: 0;
+    animation: scrolldown 3s ease-in-out infinite;
+  }
+  @keyframes scrolldown {
+    0%,100% { height: 16px; top: 0; }
+    50% { height: 16px; top: calc(80px - 16px); }
+  }
+
+  .selected-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(10,10,10,0.95);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 14px 32px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    backdrop-filter: blur(10px);
+  }
+  .selected-bar.visible { display: flex; }
+  .selected-bar strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>Ideas para background de scroll</h1>
+<p class="sub">Un elemento de fondo que evoluciona a medida que scrolleás por la landing.<br>Hacé click en la que más te llame la atención.</p>
+
+<div class="ideas">
+
+  <!-- A: Merkle Tree -->
+  <div class="idea" id="idea-a" onclick="select('a', 'Árbol de Merkle animado')">
+    <div class="idea-preview" id="prev-a">
+      <canvas id="canvas-a"></canvas>
+      <div class="scroll-bar"><div class="scroll-thumb" style="height:16px"></div></div>
+      <div class="scroll-label">SCROLL →  cambia estado</div>
+    </div>
+    <div class="idea-info">
+      <div class="idea-tag">Idea A · Técnico / Blockchain</div>
+      <div class="idea-title">Árbol de Merkle que se construye</div>
+      <div class="idea-desc">
+        Un árbol de Merkle abstracto vive en el fondo. Al inicio aparece incompleto, con nodos rojos (documentos falsos). A medida que scrolleás, los nodos se van verificando y volviéndose blancos, el árbol crece y se completa. Al llegar al final, el árbol entero brilla — todo verificado.
+      </div>
+      <div class="idea-how">
+        <span>Técnica:</span> Canvas 2D con requestAnimationFrame. IntersectionObserver por sección para triggerear estados. Nodos con interpolación de color rgba(248,113,113) → rgba(255,255,255). Líneas que "se dibujan" con stroke-dashoffset.
+      </div>
+    </div>
+  </div>
+
+  <!-- B: Hash stream -->
+  <div class="idea" id="idea-b" onclick="select('b', 'Stream de hashes')">
+    <div class="idea-preview" id="prev-b">
+      <canvas id="canvas-b"></canvas>
+      <div class="scroll-bar"><div class="scroll-thumb"></div></div>
+      <div class="scroll-label">SCROLL →  estabiliza el ruido</div>
+    </div>
+    <div class="idea-info">
+      <div class="idea-tag">Idea B · Datos / Matrix</div>
+      <div class="idea-title">Lluvia de hashes que se estabiliza</div>
+      <div class="idea-desc">
+        Columnas de caracteres hexadecimales caen lentamente (estilo matrix pero muy sutil y monocromático). Al inicio caen rápido y caóticas — representando el caos sin verificación. A medida que scrolleás, se ralentizan, se ordenan en columnas fijas, y eventualmente forman un hash SHA-256 visible en el centro.
+      </div>
+      <div class="idea-how">
+        <span>Técnica:</span> Canvas con columnas de chars hex. scroll progress (0→1) controla velocidad de caída y opacidad. Al 100% los chars "freezan" y el centro muestra un hash fijo con glow verde/blanco.
+      </div>
+    </div>
+  </div>
+
+  <!-- C: Línea de señal -->
+  <div class="idea" id="idea-c" onclick="select('c', 'Señal que se estabiliza')">
+    <div class="idea-preview" id="prev-c">
+      <canvas id="canvas-c"></canvas>
+      <div class="scroll-bar"><div class="scroll-thumb"></div></div>
+      <div class="scroll-label">SCROLL →  señal se limpia</div>
+    </div>
+    <div class="idea-info">
+      <div class="idea-tag">Idea C · Minimalista / Elegante</div>
+      <div class="idea-title">Señal ruidosa que se limpia</div>
+      <div class="idea-desc">
+        Una línea horizontal atraviesa todo el fondo como una señal de osciloscopio. Al inicio tiembla con ruido alto (documento comprometido). A medida que scrolleás la señal se va suavizando hasta volverse una línea perfectamente recta y limpia. Muy sutil, muy elegante.
+      </div>
+      <div class="idea-how">
+        <span>Técnica:</span> SVG o Canvas con una polyline. Noise generado con simplex o Math.sin con múltiples frecuencias. scroll progress reduce la amplitud del ruido de 40px → 0px. Color transiciona de rgba(248,113,113,0.15) → rgba(255,255,255,0.06).
+      </div>
+    </div>
+  </div>
+
+  <!-- D: Grid de bloques -->
+  <div class="idea" id="idea-d" onclick="select('d', 'Grid de bloques blockchain')">
+    <div class="idea-preview" id="prev-d">
+      <canvas id="canvas-d"></canvas>
+      <div class="scroll-bar"><div class="scroll-thumb"></div></div>
+      <div class="scroll-label">SCROLL →  bloques se encadenan</div>
+    </div>
+    <div class="idea-info">
+      <div class="idea-tag">Idea D · Narrativo / Blockchain</div>
+      <div class="idea-title">Bloques que se encadenan</div>
+      <div class="idea-desc">
+        Un grid de bloques pequeños llena el fondo, al inicio desconectados y con algunos en rojo (inválidos). A medida que scrolleás, los bloques se van conectando entre sí con líneas finas, los rojos desaparecen, y el grid completo forma una cadena visible — la blockchain. Cada sección de la landing "valida" una fila de bloques.
+      </div>
+      <div class="idea-how">
+        <span>Técnica:</span> Canvas con grid de rectángulos 12×8px con gap. Cada bloque tiene un estado: inválido (rojo tenue) → validado (blanco tenue). scroll progress determina qué porcentaje del grid está validado. Líneas de conexión se dibujan con animación de dash.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="selected-bar" id="sel-bar">
+  Seleccionaste: <strong id="sel-name">—</strong>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">contame en el terminal si querés combinar ideas o ajustar</span>
+</div>
+
+<script>
+function select(id, name) {
+  document.querySelectorAll('.idea').forEach(el => el.classList.remove('selected'));
+  document.getElementById('idea-' + id).classList.add('selected');
+  document.getElementById('sel-name').textContent = name;
+  document.getElementById('sel-bar').classList.add('visible');
+}
+
+// ── Preview A: Merkle tree ──
+(function() {
+  const c = document.getElementById('canvas-a');
+  const box = document.getElementById('prev-a');
+  c.width = 320; c.height = 200;
+  const ctx = c.getContext('2d');
+  let t = 0;
+
+  const nodes = [
+    { x: 160, y: 24, state: 1 },
+    { x: 90, y: 80, state: 1 },
+    { x: 230, y: 80, state: 0 },
+    { x: 55, y: 140, state: 1 },
+    { x: 125, y: 140, state: 0 },
+    { x: 195, y: 140, state: 1 },
+    { x: 265, y: 140, state: 0 },
+  ];
+  const edges = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]];
+
+  function drawA() {
+    ctx.clearRect(0,0,320,200);
+    const pulse = (Math.sin(t * 0.03) + 1) / 2;
+
+    edges.forEach(([a,b]) => {
+      ctx.beginPath();
+      ctx.moveTo(nodes[a].x, nodes[a].y);
+      ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 8, 0, Math.PI*2);
+      if (n.state) {
+        ctx.fillStyle = `rgba(255,255,255,${0.12 + pulse*0.06})`;
+        ctx.strokeStyle = `rgba(255,255,255,${0.25 + pulse*0.1})`;
+      } else {
+        ctx.fillStyle = `rgba(248,113,113,${0.12 + pulse*0.06})`;
+        ctx.strokeStyle = `rgba(248,113,113,${0.35 + pulse*0.1})`;
+      }
+      ctx.lineWidth = 1;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '7px monospace';
+      ctx.fillStyle = n.state ? 'rgba(255,255,255,0.5)' : 'rgba(248,113,113,0.7)';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.state ? '✓' : '✗', n.x, n.y + 3);
+    });
+
+    t++; requestAnimationFrame(drawA);
+  }
+  drawA();
+})();
+
+// ── Preview B: Hash rain ──
+(function() {
+  const c = document.getElementById('canvas-b');
+  c.width = 320; c.height = 200;
+  const ctx = c.getContext('2d');
+  const chars = '0123456789abcdef';
+  const cols = 40;
+  const drops = Array.from({length: cols}, () => Math.random() * 200);
+  let t = 0;
+
+  function drawB() {
+    ctx.fillStyle = 'rgba(5,5,5,0.15)';
+    ctx.fillRect(0,0,320,200);
+
+    ctx.font = '9px monospace';
+    drops.forEach((y, i) => {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      const x = (i / cols) * 320 + 4;
+      const alpha = 0.08 + Math.random() * 0.12;
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillText(ch, x, y);
+      drops[i] = y > 200 ? 0 : y + 1.5;
+    });
+    t++; requestAnimationFrame(drawB);
+  }
+  drawB();
+})();
+
+// ── Preview C: Signal ──
+(function() {
+  const c = document.getElementById('canvas-c');
+  c.width = 320; c.height = 200;
+  const ctx = c.getContext('2d');
+  let t = 0;
+
+  function drawC() {
+    ctx.clearRect(0,0,320,200);
+    ctx.beginPath();
+    const noise = 28;
+    for (let x = 0; x <= 320; x += 2) {
+      const y = 100
+        + Math.sin(x * 0.08 + t * 0.05) * noise * 0.5
+        + Math.sin(x * 0.03 + t * 0.03) * noise * 0.3
+        + (Math.random() - 0.5) * noise * 0.4;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(248,113,113,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // clean line ghost
+    ctx.beginPath();
+    ctx.moveTo(0, 100); ctx.lineTo(320, 100);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    t++; requestAnimationFrame(drawC);
+  }
+  drawC();
+})();
+
+// ── Preview D: Block grid ──
+(function() {
+  const c = document.getElementById('canvas-d');
+  c.width = 320; c.height = 200;
+  const ctx = c.getContext('2d');
+  const bw = 14, bh = 10, gap = 4;
+  const cols = Math.floor(320 / (bw+gap));
+  const rows = Math.floor(200 / (bh+gap));
+  let t = 0;
+
+  const states = Array.from({length: rows}, () =>
+    Array.from({length: cols}, () => Math.random() > 0.7 ? 'bad' : 'ok')
+  );
+
+  function drawD() {
+    ctx.clearRect(0,0,320,200);
+    const pulse = (Math.sin(t * 0.04) + 1) / 2;
+
+    states.forEach((row, ri) => {
+      row.forEach((state, ci) => {
+        const x = ci * (bw + gap) + 2;
+        const y = ri * (bh + gap) + 2;
+        if (state === 'bad') {
+          ctx.fillStyle = `rgba(248,113,113,${0.08 + pulse * 0.06})`;
+          ctx.strokeStyle = `rgba(248,113,113,${0.2 + pulse * 0.1})`;
+        } else {
+          ctx.fillStyle = `rgba(255,255,255,${0.04 + pulse * 0.02})`;
+          ctx.strokeStyle = `rgba(255,255,255,${0.09})`;
+        }
+        ctx.lineWidth = 0.5;
+        ctx.fillRect(x, y, bw, bh);
+        ctx.strokeRect(x, y, bw, bh);
+      });
+    });
+    t++; requestAnimationFrame(drawD);
+  }
+  drawD();
+})();
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@
   /* Tipografías */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-cormorant);
 
   /* Nav active */
   --color-nav-active-bg: #1f1f23;
@@ -156,4 +157,73 @@ input[type="date"] {
 
 [data-theme="light"] input[type="date"] {
   color-scheme: light;
+}
+
+/* ─── Landing page — scroll-reveal animations ─── */
+.land-fadeup {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.land-fadeup.land-in {
+  opacity: 1;
+  transform: none;
+}
+.land-fadeup:nth-child(1) { transition-delay: 0s; }
+.land-fadeup:nth-child(2) { transition-delay: 0.07s; }
+.land-fadeup:nth-child(3) { transition-delay: 0.14s; }
+.land-fadeup:nth-child(4) { transition-delay: 0.21s; }
+.land-fadeup:nth-child(5) { transition-delay: 0.28s; }
+
+.land-fadein {
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.land-fadein.land-in {
+  opacity: 1;
+}
+
+/* Merkle tree SVG draw animation */
+@keyframes merkle-draw {
+  from { stroke-dashoffset: 300; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes merkle-node-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.merkle-line {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+}
+.merkle-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.merkle-visible .merkle-line {
+  animation: merkle-draw 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.merkle-visible .merkle-node {
+  animation: merkle-node-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Terminal typewriter */
+@keyframes terminal-line-in {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 60px; }
+}
+.terminal-line {
+  opacity: 0;
+  overflow: hidden;
+  max-height: 0;
+}
+.terminal-visible .terminal-line {
+  animation: terminal-line-in 0.4s ease forwards;
+}
+
+/* ─── Landing font utility ─── */
+.font-display {
+  font-family: var(--font-cormorant), 'Palatino Linotype', Georgia, serif;
 }

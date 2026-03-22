@@ -1,0 +1,195 @@
+<style>
+  body { background: #050505; }
+  * { box-sizing: border-box; }
+
+  .preview-wrap {
+    background: #0d0d0d;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+  .preview-inner { padding: 28px 24px; transform-origin: top left; }
+
+  /* shared mini styles */
+  .m-headline { font-size: 18px; font-weight: 300; line-height: 1.08; letter-spacing: -0.025em; font-family: Georgia, serif; }
+  .m-headline .dim { color: rgba(255,255,255,0.3); }
+  .m-num { font-size: 30px; font-weight: 200; color: rgba(255,255,255,0.06); font-family: monospace; line-height: 1; }
+  .m-title { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.8); margin: 0 0 3px; }
+  .m-body { font-size: 10px; color: rgba(255,255,255,0.28); line-height: 1.55; margin: 0; }
+  .m-row { display: grid; grid-template-columns: 40px 1fr; gap: 4px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.06); }
+  .m-border { border-top: 1px solid rgba(255,255,255,0.06); }
+
+  .m-pdf {
+    background: #0a0a0a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: monospace;
+  }
+  .m-pdf-head { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .m-pdf-fname { font-size: 8px; color: rgba(255,255,255,0.28); }
+  .m-pdf-badge { font-size: 7px; padding: 2px 6px; border-radius: 100px; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); color: rgba(248,113,113,0.7); }
+  .m-pdf-body { padding: 12px; }
+  .m-hash-lbl { font-size: 7.5px; color: rgba(255,255,255,0.2); margin-bottom: 3px; }
+  .m-hash-box { padding: 6px 8px; border-radius: 4px; font-size: 8px; word-break: break-all; margin-bottom: 6px; }
+  .m-hash-ok { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); }
+  .m-hash-err { background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.2); color: rgba(248,113,113,0.65); }
+  .m-mismatch { padding: 8px 10px; background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.15); border-radius: 6px; margin-top: 4px; }
+  .m-mismatch-t { font-size: 9px; color: #f87171; margin: 0 0 2px; font-weight: 600; }
+  .m-mismatch-b { font-size: 8px; color: rgba(248,113,113,0.55); margin: 0; line-height: 1.4; }
+  .m-pdf-foot { padding: 8px 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 6px; }
+  .m-dot { width: 5px; height: 5px; border-radius: 50%; background: #f87171; flex-shrink: 0; }
+  .m-foot-t { font-size: 8px; color: rgba(255,255,255,0.18); }
+
+  .lbl { font-family: monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); margin-bottom: 6px; }
+</style>
+
+<h2>Opciones de layout</h2>
+<p class="subtitle">¿Cómo ordenás los elementos de la sección?</p>
+
+<div class="cards" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+  <!-- A: PDF arriba (hero), problemas abajo -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview-wrap" style="margin: 16px 16px 0;">
+      <div class="preview-inner">
+        <div class="lbl">↑ PDF card</div>
+        <div class="m-pdf" style="margin-bottom: 16px;">
+          <div class="m-pdf-head"><span class="m-pdf-fname">diploma_martinez_2024.pdf</span><span class="m-pdf-badge">sin verificar</span></div>
+          <div class="m-pdf-body">
+            <div class="m-hash-lbl">hash original</div>
+            <div class="m-hash-box m-hash-ok">a3f9b2c8e1d4f7a2b5c8d3e6f1a4b7c2</div>
+            <div class="m-hash-lbl">hash recibido</div>
+            <div class="m-hash-box m-hash-err">c1d8e4a2f9b3c7e1d5f2a8b4c9e3d7f1</div>
+            <div class="m-mismatch"><p class="m-mismatch-t">HASH MISMATCH</p><p class="m-mismatch-b">El documento fue modificado.</p></div>
+          </div>
+        </div>
+        <div class="lbl">↓ Headline + problemas</div>
+        <div class="m-headline" style="margin-bottom:12px"><span style="color:#fff">Cualquier documento</span> <span class="dim">puede ser falso.</span></div>
+        <div class="m-row"><span class="m-num">01</span><div><p class="m-title">Un PDF se edita en minutos</p><p class="m-body">Acrobat, Photoshop, cualquier herramienta.</p></div></div>
+        <div class="m-row"><span class="m-num">02</span><div><p class="m-title">No hay registro independiente</p><p class="m-body">Las bases de datos se pueden hackear.</p></div></div>
+        <div class="m-border"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout A</div>
+      <div class="card-title">PDF arriba, texto abajo</div>
+      <div class="card-desc">El card de hash mismatch como "gancho" visual antes de explicar los problemas. Una columna.</div>
+    </div>
+  </div>
+
+  <!-- B: Headline centrada, luego grid 3 col + pdf -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview-wrap" style="margin: 16px 16px 0;">
+      <div class="preview-inner">
+        <div class="m-headline" style="margin-bottom:16px;text-align:center"><span style="color:#fff">Cualquier documento</span><br><span class="dim">puede ser falso.</span><br><span style="color:#fff">El tuyo también.</span></div>
+        <div class="lbl" style="text-align:center">↓ 3 columnas de problemas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+          <div style="padding:10px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;">
+            <div class="m-num" style="font-size:22px;margin-bottom:4px">01</div>
+            <p class="m-title">PDF editable</p>
+            <p class="m-body">Cualquier herramienta. Nadie lo nota.</p>
+          </div>
+          <div style="padding:10px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;">
+            <div class="m-num" style="font-size:22px;margin-bottom:4px">02</div>
+            <p class="m-title">Sin registro</p>
+            <p class="m-body">Las BDs se pueden hackear.</p>
+          </div>
+          <div style="padding:10px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;">
+            <div class="m-num" style="font-size:22px;margin-bottom:4px">03</div>
+            <p class="m-title">Verificar tarda</p>
+            <p class="m-body">El fraude pasa desapercibido.</p>
+          </div>
+        </div>
+        <div class="lbl" style="text-align:center">↓ PDF card centrado</div>
+        <div class="m-pdf" style="max-width:280px;margin:0 auto">
+          <div class="m-pdf-head"><span class="m-pdf-fname">diploma_martinez_2024.pdf</span><span class="m-pdf-badge">sin verificar</span></div>
+          <div class="m-pdf-body">
+            <div class="m-mismatch"><p class="m-mismatch-t">HASH MISMATCH</p><p class="m-mismatch-b">El documento fue modificado después de su emisión.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout B</div>
+      <div class="card-title">Centrado + 3 columnas</div>
+      <div class="card-desc">Headline centrada, problemas en grid horizontal, PDF card abajo centrado. Más simétrico.</div>
+    </div>
+  </div>
+
+  <!-- C: Headline grande + PDF lado a lado (invertido) -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview-wrap" style="margin: 16px 16px 0;">
+      <div class="preview-inner">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+          <div>
+            <div class="lbl">← PDF sticky</div>
+            <div class="m-pdf">
+              <div class="m-pdf-head"><span class="m-pdf-fname">diploma_martinez_2024.pdf</span><span class="m-pdf-badge">sin verificar</span></div>
+              <div class="m-pdf-body">
+                <div class="m-hash-lbl">hash original</div>
+                <div class="m-hash-box m-hash-ok">a3f9b2c8...b7c2</div>
+                <div class="m-hash-lbl">hash recibido</div>
+                <div class="m-hash-box m-hash-err">c1d8e4a2...d7f1</div>
+                <div class="m-mismatch"><p class="m-mismatch-t">HASH MISMATCH</p><p class="m-mismatch-b">Modificado.</p></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="lbl">→ Headline + problemas</div>
+            <div class="m-headline" style="margin-bottom:12px"><span style="color:#fff">Cualquier documento</span><br><span class="dim">puede ser falso.</span></div>
+            <div class="m-row"><span class="m-num">01</span><div><p class="m-title">PDF editable</p><p class="m-body">Nadie lo nota.</p></div></div>
+            <div class="m-row"><span class="m-num">02</span><div><p class="m-title">Sin registro</p><p class="m-body">Se puede hackear.</p></div></div>
+            <div class="m-row"><span class="m-num">03</span><div><p class="m-title">Verificar tarda</p><p class="m-body">El fraude pasa.</p></div></div>
+            <div class="m-border"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout C</div>
+      <div class="card-title">PDF izquierda, texto derecha</div>
+      <div class="card-desc">Invertido respecto al actual — el card de hash mismatch ancla visualmente la izquierda.</div>
+    </div>
+  </div>
+
+  <!-- D: Headline full-width, luego dos col (problemas | pdf) como ahora pero con más aire -->
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="preview-wrap" style="margin: 16px 16px 0;">
+      <div class="preview-inner">
+        <div class="m-headline" style="margin-bottom:20px;font-size:22px">
+          <span style="color:#fff">Cualquier documento</span><br>
+          <span class="dim">puede ser falso.</span><br>
+          <span style="color:#fff">El tuyo también.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+          <div>
+            <div class="m-row" style="border-top:none;padding-top:0"><span class="m-num">01</span><div><p class="m-title">PDF editable</p><p class="m-body">Cualquier herramienta. Nadie lo nota.</p></div></div>
+            <div class="m-row"><span class="m-num">02</span><div><p class="m-title">Sin registro</p><p class="m-body">Las BDs se pueden hackear.</p></div></div>
+            <div class="m-row"><span class="m-num">03</span><div><p class="m-title">Verificar tarda</p><p class="m-body">El fraude pasa desapercibido.</p></div></div>
+            <div class="m-border"></div>
+          </div>
+          <div>
+            <div class="m-pdf">
+              <div class="m-pdf-head"><span class="m-pdf-fname">diploma_martinez_2024.pdf</span><span class="m-pdf-badge">sin verificar</span></div>
+              <div class="m-pdf-body">
+                <div class="m-hash-lbl">hash original</div>
+                <div class="m-hash-box m-hash-ok">a3f9b2c8e1d4f7a2b5c8</div>
+                <div class="m-hash-lbl">hash recibido</div>
+                <div class="m-hash-box m-hash-err">c1d8e4a2f9b3c7e1d5f2</div>
+                <div class="m-mismatch"><p class="m-mismatch-t">HASH MISMATCH</p><p class="m-mismatch-b">Modificado después de emisión.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout D</div>
+      <div class="card-title">Headline full-width, split abajo</div>
+      <div class="card-desc">Headline ocupa todo el ancho arriba, después los problemas y el PDF en dos columnas. Más narrativo.</div>
+    </div>
+  </div>
+
+</div>

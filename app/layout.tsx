@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Geist_Mono } from 'next/font/google'
+import { Inter, Geist_Mono, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { SessionProvider } from '@/components/providers/SessionProvider'
@@ -15,6 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const cormorant = Cormorant_Garamond({
+  variable: '--font-cormorant',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  style: ['normal'],
+})
+
+
 export const metadata: Metadata = {
   title: 'unickeys — Documentos digitales con respaldo blockchain',
   description:
@@ -28,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} ${geistMono.variable} ${cormorant.variable} antialiased`} suppressHydrationWarning>
         <SessionProvider>
           <QueryProvider>{children}</QueryProvider>
         </SessionProvider>

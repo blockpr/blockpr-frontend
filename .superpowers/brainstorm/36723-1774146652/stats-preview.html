@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050505; font-family: -apple-system, sans-serif; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+  .section { width: 100%; max-width: 900px; }
+  .top-label { font-size: 12px; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); text-transform: uppercase; text-align: center; margin-bottom: 16px; }
+  .title { font-size: 36px; font-weight: 400; letter-spacing: -0.02em; text-align: center; margin-bottom: 48px; line-height: 1.2; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 28px; transition: border-color 0.3s; }
+  .card:hover { border-color: rgba(255,255,255,0.15); }
+  .card-label { font-size: 11px; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 12px; }
+  .card-value { font-size: 40px; font-weight: 500; letter-spacing: -0.03em; margin-bottom: 8px; }
+  .card-change { font-size: 12px; margin-bottom: 20px; }
+  canvas { display: block; width: 100%; height: 64px; cursor: crosshair; }
+  .tooltip { position: fixed; background: rgba(20,20,20,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #fff; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; }
+</style>
+</head>
+<body>
+<div class="section">
+  <div class="top-label">Plataforma en números</div>
+  <div class="title">Datos que hablan<br/>por sí solos</div>
+  <div class="grid" id="grid"></div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+var STATS = [
+  { label: 'Certificados emitidos', value: 124830, change: '+18% este mes', color: '#4ade80' },
+  { label: 'Verificaciones realizadas', value: 841200, change: '+34% este mes', color: '#60a5fa' },
+  { label: 'Fraudes detectados', value: 2109, change: '98.7% precisión', color: '#f87171' },
+  { label: 'Empresas activas', value: 318, change: '+12 este mes', color: '#a78bfa' }
+];
+
+function genData() {
+  var d = [], v = 30 + Math.random() * 20;
+  for (var i = 0; i < 24; i++) {
+    v = Math.max(10, Math.min(90, v + (Math.random() - 0.42) * 15));
+    d.push(v);
+  }
+  return d;
+}
+
+function animateCounter(el, target, duration) {
+  var start = performance.now();
+  function tick(now) {
+    var t = Math.min(1, (now - start) / duration);
+    var ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(ease * target).toLocaleString('es-AR');
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function drawSparkline(canvas, data, color, progress, hoverIndex) {
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var w = canvas.offsetWidth;
+  var h = canvas.offsetHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+
+  var n = Math.ceil(data.length * progress);
+  var pts = data.slice(0, n);
+  if (pts.length < 2) return;
+
+  var minV = Math.min.apply(null, data);
+  var maxV = Math.max.apply(null, data);
+  var range = maxV - minV || 1;
+
+  function px(i) { return (i / (data.length - 1)) * w; }
+  function py(v) { return h - 8 - ((v - minV) / range) * (h - 16); }
+
+  var grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, color + '33');
+  grad.addColorStop(1, color + '00');
+
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(pts[0]));
+  for (var i = 1; i < pts.length; i++) ctx.lineTo(px(i), py(pts[i]));
+  ctx.lineTo(px(pts.length - 1), h);
+  ctx.lineTo(px(0), h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(pts[0]));
+  for (var j = 1; j < pts.length; j++) ctx.lineTo(px(j), py(pts[j]));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  if (hoverIndex >= 0 && hoverIndex < data.length) {
+    var hx = px(hoverIndex), hy = py(data[hoverIndex]);
+    ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, h);
+    ctx.strokeStyle = color + '40'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+}
+
+var grid = document.getElementById('grid');
+var tooltip = document.getElementById('tooltip');
+
+STATS.forEach(function(stat, i) {
+  var data = genData();
+
+  var card = document.createElement('div');
+  card.className = 'card';
+
+  var lbl = document.createElement('div'); lbl.className = 'card-label'; lbl.textContent = stat.label;
+  var val = document.createElement('div'); val.className = 'card-value'; val.textContent = '0';
+  var chg = document.createElement('div'); chg.className = 'card-change'; chg.style.color = stat.color; chg.textContent = stat.change;
+  var cvs = document.createElement('canvas'); cvs.height = 64;
+
+  card.appendChild(lbl); card.appendChild(val); card.appendChild(chg); card.appendChild(cvs);
+  grid.appendChild(card);
+
+  setTimeout(function() {
+    animateCounter(val, stat.value, 1800);
+    var startT = performance.now();
+    var dur = 1200 + i * 200;
+    function draw(now) {
+      var p = Math.min(1, (now - startT) / dur);
+      var ease = 1 - Math.pow(1 - p, 3);
+      drawSparkline(cvs, data, stat.color, ease, -1);
+      if (p < 1) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }, i * 150);
+
+  cvs.addEventListener('mousemove', function(e) {
+    var rect = cvs.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var idx = Math.max(0, Math.min(data.length - 1, Math.round((mx / rect.width) * (data.length - 1))));
+    drawSparkline(cvs, data, stat.color, 1, idx);
+    var months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    var mIdx = Math.floor((idx / data.length) * 12);
+    tooltip.style.opacity = '1';
+    tooltip.style.left = (e.clientX + 12) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.textContent = months[mIdx] + ': ' + Math.round(stat.value * (0.4 + (idx / data.length) * 0.6)).toLocaleString('es-AR');
+  });
+
+  cvs.addEventListener('mouseleave', function() {
+    tooltip.style.opacity = '0';
+    drawSparkline(cvs, data, stat.color, 1, -1);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<style>
+  body { background: #050505; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+
+  .preview {
+    background: #050505;
+    padding: 60px 64px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #fff;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 28px;
+  }
+
+  .section-title {
+    font-size: clamp(24px, 2.8vw, 38px);
+    font-weight: 300;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    margin: 0 0 72px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .section-title .dim {
+    color: rgba(255,255,255,0.28);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 0 24px;
+    padding: 28px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    align-items: start;
+  }
+
+  .row:last-child {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .row-num {
+    font-size: 64px;
+    font-weight: 200;
+    color: rgba(255,255,255,1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    user-select: none;
+    padding-top: 4px;
+  }
+
+  .row-content {}
+
+  .row-title {
+    font-size: 20px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.88);
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .row-body {
+    font-size: 18px;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.7;
+    margin: 0;
+    font-weight: 300;
+    max-width: 560px;
+  }
+
+  .note {
+    margin-top: 48px;
+    padding: 16px 20px;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.25);
+    line-height: 1.6;
+  }
+
+  .note strong { color: rgba(255,255,255,0.5); }
+</style>
+
+<h2>Vista previa — Sección solución (editorial)</h2>
+<p class="subtitle">Así se ve el estado final tras scrollear.</p>
+
+<div class="preview">
+  <div class="section-label">La solución</div>
+
+  <h2 class="section-title">
+    unickeys cierra<br>
+    <span class="dim">cada una de esas brechas.</span>
+  </h2>
+
+  <div class="row">
+    <span class="row-num">01</span>
+    <div class="row-content">
+      <p class="row-title">Emisión verificable</p>
+      <p class="row-body">Generá certificados con QR único y firma digital. Los datos originales se guardan en blockchain — inmutables, sin depender de tu base de datos.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <span class="row-num">02</span>
+    <div class="row-content">
+      <p class="row-title">Verificación pública instantánea</p>
+      <p class="row-body">Cualquier persona escanea el QR y ve los datos reales emitidos. Sin registro, sin llamadas, sin esperas. Estado actualizado en tiempo real.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <span class="row-num">03</span>
+    <div class="row-content">
+      <p class="row-title">Detección inteligente de fraude</p>
+      <p class="row-body">Subí una imagen o PDF sospechoso. La IA compara contra los datos originales y detecta cualquier modificación, sin importar cuán sutil.</p>
+    </div>
+  </div>
+</div>
+
+<div class="preview" style="padding-top: 0;">
+  <div class="note">
+    <strong>Animación scroll-driven:</strong> El label y título aparecen primero con un fade suave (translateY + opacity). Luego cada fila se revela secuencialmente — el separador superior y el contenido hacen fade+slideUp mientras scrolleás. Fondo #050505 limpio, sin canvas, sin íconos.
+  </div>
+</div>
+
+<div class="options" style="margin-top: 24px;">
+  <div class="option" data-choice="implementar" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>Se ve bien, implementar</h3>
+      <p>Así está perfecto</p>
+    </div>
+  </div>
+  <div class="option" data-choice="titulo" onclick="toggleSelect(this)">
+    <div class="letter">T</div>
+    <div class="content">
+      <h3>Cambiar el título</h3>
+      <p>El copy no me convence</p>
+    </div>
+  </div>
+  <div class="option" data-choice="tipografia" onclick="toggleSelect(this)">
+    <div class="letter">S</div>
+    <div class="content">
+      <h3>Ajustar tamaños / estilo</h3>
+      <p>Algo visual no me cierra</p>
+    </div>
+  </div>
+</div>

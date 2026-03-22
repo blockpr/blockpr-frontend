@@ -1,0 +1,250 @@
+<style>
+  body { background: #050505; }
+
+  .section-wrap {
+    background: #050505;
+    padding: 60px 48px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.07);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  /* Headline */
+  .headline {
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 300;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    margin: 0 0 48px;
+  }
+
+  /* Problem rows — Option D */
+  .prob-list { display: flex; flex-direction: column; }
+
+  .prob-row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 4px;
+    padding: 22px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+  }
+
+  .prob-num {
+    font-size: 36px;
+    font-weight: 200;
+    color: rgba(255,255,255,0.06);
+    line-height: 1;
+    font-family: 'Courier New', monospace;
+    user-select: none;
+    letter-spacing: -0.02em;
+  }
+
+  .prob-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.82);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    padding-top: 4px;
+  }
+
+  .prob-body {
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.28);
+    margin: 0;
+  }
+
+  .prob-border-end {
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* PDF Card */
+  .pdf-card {
+    background: #0a0a0a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+  }
+
+  .pdf-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pdf-filename {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.06em;
+  }
+
+  .pdf-badge {
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.2);
+    color: rgba(248,113,113,0.8);
+    letter-spacing: 0.06em;
+  }
+
+  .pdf-body { padding: 20px 18px; }
+
+  .hash-label { font-size: 9px; color: rgba(255,255,255,0.2); margin-bottom: 5px; letter-spacing: 0.06em; }
+
+  .hash-box {
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    word-break: break-all;
+    margin-bottom: 10px;
+  }
+  .hash-ok { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.45); }
+  .hash-err { background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.2); color: rgba(248,113,113,0.7); margin-bottom: 16px; }
+
+  .mismatch-box {
+    padding: 12px 14px;
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.15);
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .mismatch-title { font-size: 11px; color: #f87171; margin: 0 0 3px; font-weight: 500; }
+  .mismatch-body { font-size: 10px; color: rgba(248,113,113,0.6); margin: 0; line-height: 1.5; }
+
+  .pdf-footer {
+    padding: 12px 18px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #f87171; flex-shrink: 0; }
+  .pdf-footer-text { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 0.04em; }
+
+  .bridge {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bridge-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+  .bridge-text { font-size: 10px; color: rgba(255,255,255,0.18); letter-spacing: 0.1em; white-space: nowrap; font-family: monospace; }
+</style>
+
+<h2>Vista previa — Opción D</h2>
+<p class="subtitle">Números grandes como decoración fantasma. ¿Listo para implementar?</p>
+
+<div class="section-wrap">
+  <div class="two-col">
+
+    <!-- LEFT -->
+    <div>
+      <div class="headline">
+        <span style="color:#fff">Cualquier documento</span><br>
+        <span style="color:rgba(255,255,255,0.32)">puede ser falso.</span><br>
+        <span style="color:#fff">El tuyo también.</span>
+      </div>
+
+      <div class="prob-list">
+        <div class="prob-row">
+          <span class="prob-num">01</span>
+          <div>
+            <p class="prob-title">Un PDF se edita en minutos</p>
+            <p class="prob-body">Acrobat, Photoshop, cualquier herramienta. El documento parece idéntico al original. Nadie lo nota.</p>
+          </div>
+        </div>
+        <div class="prob-row">
+          <span class="prob-num">02</span>
+          <div>
+            <p class="prob-title">No hay registro independiente</p>
+            <p class="prob-body">Las bases de datos del emisor se pueden hackear, modificar o simplemente desaparecer.</p>
+          </div>
+        </div>
+        <div class="prob-row">
+          <span class="prob-num">03</span>
+          <div>
+            <p class="prob-title">Verificar toma días</p>
+            <p class="prob-body">Llamadas, emails, esperas. Sin verificación automática, el fraude pasa desapercibido hasta que ya es tarde.</p>
+          </div>
+        </div>
+        <div class="prob-border-end"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PDF card (sin cambios) -->
+    <div>
+      <div class="pdf-card">
+        <div class="pdf-header">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            <span class="pdf-filename">diploma_martinez_2024.pdf</span>
+          </div>
+          <span class="pdf-badge">sin verificar</span>
+        </div>
+        <div class="pdf-body">
+          <p style="font-size:9px;color:rgba(255,255,255,0.2);letter-spacing:0.12em;text-transform:uppercase;margin:0 0 14px">Verificación de integridad</p>
+
+          <div class="hash-label">hash original (emisor)</div>
+          <div class="hash-box hash-ok">a3f9b2c8e1d4f7a2b5c8d3e6f1a4b7c2</div>
+
+          <div class="hash-label">hash del archivo recibido</div>
+          <div class="hash-box hash-err">c1d8e4a2f9b3c7e1d5f2a8b4c9e3d7f1</div>
+
+          <div class="mismatch-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <div>
+              <p class="mismatch-title">HASH MISMATCH</p>
+              <p class="mismatch-body">El documento fue modificado después de su emisión. No se puede confiar en su contenido.</p>
+            </div>
+          </div>
+        </div>
+        <div class="pdf-footer">
+          <div class="dot"></div>
+          <span class="pdf-footer-text">sin unickeys — no hay forma de saber quién modificó esto ni cuándo</span>
+        </div>
+      </div>
+
+      <div class="bridge">
+        <div class="bridge-line"></div>
+        <span class="bridge-text">existe una solución →</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top: 24px;">
+  <div class="option" data-choice="implementar" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>Se ve bien, implementar</h3>
+      <p>Aplicar este diseño al componente real</p>
+    </div>
+  </div>
+  <div class="option" data-choice="ajustar" onclick="toggleSelect(this)">
+    <div class="letter">~</div>
+    <div class="content">
+      <h3>Ajustar algo primero</h3>
+      <p>Cuéntame qué cambiarías</p>
+    </div>
+  </div>
+</div>

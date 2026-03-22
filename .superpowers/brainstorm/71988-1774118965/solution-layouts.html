@@ -1,0 +1,135 @@
+<style>
+  body { background: #050505; }
+  * { box-sizing: border-box; }
+
+  .preview-wrap {
+    background: #0d0d0d;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 14px 14px 0;
+  }
+  .preview-inner {
+    padding: 28px 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #fff;
+  }
+
+  /* shared mini */
+  .m-label { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.2); margin-bottom: 10px; }
+  .m-headline { font-size: 18px; font-weight: 300; letter-spacing: -0.025em; line-height: 1.1; color: rgba(255,255,255,0.9); margin: 0 0 6px; }
+  .m-sub { font-size: 10px; color: rgba(255,255,255,0.28); line-height: 1.5; margin: 0 0 20px; }
+  .m-num { font-size: 28px; font-weight: 200; color: rgba(255,255,255,0.05); font-family: monospace; line-height: 1; margin-bottom: 8px; }
+  .m-icon { font-size: 16px; margin-bottom: 8px; }
+  .m-title { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.8); margin: 0 0 4px; }
+  .m-body { font-size: 9.5px; color: rgba(255,255,255,0.28); line-height: 1.55; margin: 0; }
+  .m-tag { font-size: 8px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.35); margin-bottom: 8px; display: inline-block; }
+</style>
+
+<h2>Opciones de layout — Sección solución</h2>
+<p class="subtitle">Tres herramientas, tres estilos de presentación</p>
+
+<div class="cards" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px;">
+
+  <!-- A: 3 cards en grid -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview-wrap">
+      <div class="preview-inner">
+        <div class="m-label">La solución</div>
+        <div class="m-headline" style="margin-bottom:16px">Todo lo que necesitás<br><span style="color:rgba(255,255,255,0.3)">en un solo lugar.</span></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div style="padding:12px; border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+            <div class="m-icon">🔐</div>
+            <p class="m-title">Emisión</p>
+            <p class="m-body">Certificados con QR y firma digital.</p>
+          </div>
+          <div style="padding:12px; border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+            <div class="m-icon">🔎</div>
+            <p class="m-title">Verificación</p>
+            <p class="m-body">Validación pública instantánea.</p>
+          </div>
+          <div style="padding:12px; border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+            <div class="m-icon">🧠</div>
+            <p class="m-title">Detección</p>
+            <p class="m-body">IA detecta documentos adulterados.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout A</div>
+      <div class="card-title">Grid de 3 cards</div>
+      <div class="card-desc">Presentación simétrica. Las 3 herramientas al mismo nivel con ícono, título y descripción corta.</div>
+    </div>
+  </div>
+
+  <!-- B: Alternating rows (feature + visual) -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview-wrap">
+      <div class="preview-inner">
+        <div class="m-label">La solución</div>
+        <div style="display:flex; gap:12px; align-items:center; padding:10px 0; border-top:1px solid rgba(255,255,255,0.06);">
+          <div style="flex:1">
+            <div class="m-num">01</div>
+            <p class="m-title">Emisión verificable</p>
+            <p class="m-body">QR único, firma digital, datos originales guardados.</p>
+          </div>
+          <div style="width:60px;height:44px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔐</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; padding:10px 0; border-top:1px solid rgba(255,255,255,0.06);">
+          <div style="flex:1">
+            <div class="m-num">02</div>
+            <p class="m-title">Verificación pública</p>
+            <p class="m-body">Escaneá el QR, validación en segundos.</p>
+          </div>
+          <div style="width:60px;height:44px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔎</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; padding:10px 0; border-top:1px solid rgba(255,255,255,0.06);">
+          <div style="flex:1">
+            <div class="m-num">03</div>
+            <p class="m-title">Detección de fraude</p>
+            <p class="m-body">IA compara contra datos originales.</p>
+          </div>
+          <div style="width:60px;height:44px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🧠</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout B</div>
+      <div class="card-title">Lista numerada con visual</div>
+      <div class="card-desc">Cada herramienta como una fila con número grande, texto y visual a la derecha. Más narrativo.</div>
+    </div>
+  </div>
+
+  <!-- C: Feature spotlight (full-width rows) -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview-wrap">
+      <div class="preview-inner">
+        <div class="m-label">La solución</div>
+        <div style="margin-bottom:12px">
+          <div class="m-tag">🔐 Emisión</div>
+          <p class="m-title" style="font-size:12px">Certificados verificables con QR</p>
+          <p class="m-body">Generá documentos seguros con QR y firma digital. Guardamos los datos originales para garantizar autenticidad.</p>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.05);margin-bottom:12px"></div>
+        <div style="margin-bottom:12px">
+          <div class="m-tag">🔎 Verificación</div>
+          <p class="m-title" style="font-size:12px">Validación pública instantánea</p>
+          <p class="m-body">Cualquier persona escanea el QR y ve los datos reales emitidos, con estado actualizado.</p>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.05);margin-bottom:12px"></div>
+        <div>
+          <div class="m-tag">🧠 Detección</div>
+          <p class="m-title" style="font-size:12px">Fraude detectado automáticamente</p>
+          <p class="m-body">IA analiza imágenes o PDFs y compara contra los datos originales.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-label">Layout C</div>
+      <div class="card-title">Acordeón con tag-chips</div>
+      <div class="card-desc">Cada herramienta separada por un divider. Tag-chip con ícono como identificador, título y descripción larga.</div>
+    </div>
+  </div>
+
+</div>
