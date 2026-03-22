@@ -100,3 +100,36 @@ Two distinct layout trees via Route Groups:
 - Backend does not exist yet. Use hardcoded mock data in `src/lib/mocks/` for all data-dependent components.
 
 **Never use:** Redux, Material UI, Chakra UI, GraphQL, Create React App.
+
+## Landing page design system
+
+- Accent color: `#4db888` (verde) — definido como `const ACCENT` en cada componente de `components/layout/`
+- Background: `#050505` con graph-paper grid `rgba(255,255,255,0.022)` en `48px 48px`
+- Tipografía editorial: `fontWeight: 200`, `letterSpacing: '-0.03em'` a `-0.05em`
+- Reglas horizontales: `1px solid rgba(255,255,255,0.07)` — separador estándar entre secciones
+- `DIM = 'rgba(255,255,255,0.22)'` — color de texto secundario/labels en toda la landing
+- Secciones sticky usan wrapper `height: Nvh` + `position: sticky, top: 0, height: 100vh`
+
+## Canvas / partículas
+
+- Patrón para texto como partículas: render texto en offscreen canvas → sample píxeles → crear nodos
+- `STEP` controla densidad de partículas (2 = denso, 4 = disperso)
+- Usar spatial grid O(N·k) para líneas entre partículas — evita O(N²)
+- Canvas scroll-triggered: usar IntersectionObserver + doble `requestAnimationFrame` para esperar dimensiones reales antes de animar
+- En secciones sticky con scroll complejo, detectar scroll hacia atrás en `onScroll` (no en `onWheel`) — resetear estado cuando `p < revealOriginRef - 0.03`
+- `onWheel` solo para acciones hacia adelante; `onScroll` para resets bidireccionales
+
+## Landing components (components/layout/)
+
+- `LandingHero.tsx` — canvas con partículas orbitando logo SVG + texto "unickeys"
+- `LandingProblem.tsx` — sticky 700vh, partículas wandering → convergen al texto → cards
+- `LandingSolution.tsx` — sticky 300vh, 3 columnas editoriales
+- `LandingStats.tsx` — métricas con scramble counter + chart canvas interactivo
+- `LandingProcess.tsx` — 3 pasos con visual mocks (SignupMock, ApiMock, CertMock)
+- `LandingCTA.tsx` — headline monumental + botones
+- `LandingFooter.tsx` — canvas mini-hero de partículas + columnas de links
+
+## Gotchas React
+
+- El tamaño del array de dependencias de `useEffect` debe ser constante — si cambia entre renders da error en hot reload (se resuelve con full refresh, el código es correcto)
+- Animated underline con CSS puro en inline styles: `backgroundImage: 'linear-gradient(currentColor, currentColor)'` + `backgroundSize: '0% 1px'` + `backgroundPosition: '0 100%'`, animar con `onMouseEnter/Leave`
