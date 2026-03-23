@@ -306,7 +306,12 @@ export default function ApiKeysClient({ initialKeys }: ApiKeysClientProps) {
 
       <div className="border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden rounded-[6px] w-full">
         {keys.length === 0 ? (
-          <div className="py-12 text-center">
+          <div className="py-16 flex flex-col items-center justify-center">
+            <div className="w-12 h-12 bg-[var(--color-border)] rounded-[10px] flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+              </svg>
+            </div>
             <p className="text-sm text-[var(--color-text-secondary)]">No hay API keys creadas</p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
               Creá una para integrar unickeys con tus sistemas

@@ -130,7 +130,7 @@ export function Sidebar() {
         ref={asideRef}
         className={cn(
           'shrink-0 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
-          collapsed ? 'w-16' : 'w-72'
+          collapsed ? 'w-16' : 'w-[260px]'
         )}
       >
         {collapsed ? (
@@ -182,8 +182,8 @@ export function Sidebar() {
             {/* Header: logo + close */}
             <div className="h-16 flex items-center shrink-0 px-3 gap-2">
               <div className="flex items-center gap-2.5 flex-1 min-w-0" style={{ color: logoColor }}>
-                <UnickeysLogo className="w-9 h-9" />
-                <span className="font-semibold text-base tracking-tight whitespace-nowrap" style={{ color: logoColor }}>
+                <span style={{ marginTop: '4px' }}><UnickeysLogo className="w-7 h-7" /></span>
+                <span className="font-semibold text-sm tracking-tight whitespace-nowrap" style={{ color: logoColor }}>
                   unickeys
                 </span>
               </div>

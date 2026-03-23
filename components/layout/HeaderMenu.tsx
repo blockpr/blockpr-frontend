@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useThemeStore, type Theme } from '@/stores/themeStore'
+import { FeedbackModal } from '@/components/layout/FeedbackModal'
 
 const THEME_OPTIONS: { value: Theme; icon: React.ReactNode }[] = [
   {
@@ -72,6 +73,7 @@ export function HeaderMenu() {
   const { theme } = useThemeStore()
   const isLight = theme === 'light'
   const [menuOpen, setMenuOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export function HeaderMenu() {
           </Link>
 
           <button
-            onClick={() => setMenuOpen(false)}
+            onClick={() => { setMenuOpen(false); setFeedbackOpen(true) }}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm ${textColor} ${hoverBg} transition-colors`}
           >
             <span>Feedback</span>
@@ -140,6 +142,8 @@ export function HeaderMenu() {
           </button>
         </div>
       )}
+
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </div>
   )
 }

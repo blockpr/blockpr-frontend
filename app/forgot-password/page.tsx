@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { authApi } from '@/lib/api'
 
+const ACCENT = '#4db888'
+
 const schema = z.object({
   email: z.string().email('Email inválido'),
 })
@@ -36,64 +38,157 @@ export default function ForgotPasswordPage() {
     setSent(true)
   }
 
+  /* ── Estado: email enviado ── */
   if (sent) {
     return (
-      <AuthLayout>
-        <div className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-[var(--color-success-muted)] flex items-center justify-center mb-5">
-            <svg className="w-6 h-6 text-[var(--color-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+      <AuthLayout formBrand="center">
+        <div style={{ textAlign: 'center' }}>
+
+          {/* Ícono check */}
+          <div style={{
+            width: 48, height: 48,
+            borderRadius: '50%',
+            border: `1px solid rgba(77,184,136,0.35)`,
+            background: 'rgba(77,184,136,0.06)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 28px',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 10l4.5 4.5L16 6" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-            Revisá tu email
+
+          {/* Título */}
+          <h1 style={{
+            fontWeight: 200,
+            fontSize: 'clamp(24px, 3vw, 32px)',
+            letterSpacing: '-0.03em',
+            color: '#fff',
+            margin: '0 0 12px',
+            lineHeight: 1.1,
+          }}>
+            Revisá tu email.
           </h1>
-          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-            Enviamos las instrucciones de recuperación a{' '}
-            <span className="text-[var(--color-text-primary)] font-medium">{sentEmail}</span>
+
+          {/* Email en mono */}
+          <p style={{
+            fontSize: 13,
+            color: 'rgba(255,255,255,0.4)',
+            margin: '0 0 6px',
+            fontWeight: 300,
+          }}>
+            Enviamos las instrucciones a
           </p>
-          <p className="mt-3 text-xs text-[var(--color-text-muted)]">
+          <p style={{
+            fontFamily: 'var(--font-geist-mono)',
+            fontSize: 13,
+            color: ACCENT,
+            letterSpacing: '0.02em',
+            margin: '0 0 28px',
+          }}>
+            {sentEmail}
+          </p>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 24 }} />
+
+          {/* Spam note */}
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: '0 0 24px', lineHeight: 1.6 }}>
             ¿No llegó nada? Revisá la carpeta de spam o{' '}
             <button
               onClick={() => setSent(false)}
-              className="text-[var(--color-accent)] hover:underline"
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                fontSize: 12, textDecoration: 'underline',
+                textUnderlineOffset: 3,
+              }}
             >
               intentá de nuevo
             </button>
           </p>
-          <Link
-            href="/login"
-            className="inline-block mt-8 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+
+          {/* Volver */}
+          <Link href="/login" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.3)',
+            textDecoration: 'none',
+            letterSpacing: '0.01em',
+            transition: 'color 0.2s ease',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
           >
-            ← Volver al inicio de sesión
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M8 6H2M4.5 3L2 6l2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Volver al inicio de sesión
           </Link>
+
         </div>
       </AuthLayout>
     )
   }
 
+  /* ── Estado: formulario ── */
   return (
-    <AuthLayout>
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors mb-8"
+    <AuthLayout formBrand="center">
+
+      {/* Volver */}
+      <Link href="/login" style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.3)',
+        textDecoration: 'none',
+        letterSpacing: '0.01em',
+        marginBottom: 36,
+        transition: 'color 0.2s ease',
+      }}
+        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M8 6H2M4.5 3L2 6l2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         Volver
       </Link>
 
-      <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-        Recuperá tu acceso
+      {/* Título */}
+      <h1 style={{
+        fontWeight: 200,
+        fontSize: 'clamp(26px, 3.5vw, 38px)',
+        letterSpacing: '-0.035em',
+        color: '#fff',
+        margin: '0 0 10px',
+        lineHeight: 1.05,
+      }}>
+        Recuperá tu acceso.
       </h1>
-      <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">
+
+      <p style={{
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.32)',
+        margin: '0 0 32px',
+        lineHeight: 1.65,
+        fontWeight: 300,
+      }}>
         Ingresá el email de tu cuenta y te enviamos las instrucciones.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {/* Divider */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 28 }} />
+
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+          <label style={{
+            display: 'block',
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.35)',
+            marginBottom: 8,
+            letterSpacing: '0.01em',
+          }}>
             Email
           </label>
           <Input
@@ -105,14 +200,23 @@ export default function ForgotPasswordPage() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="mt-1.5 text-xs text-[var(--color-danger)]">{errors.email.message}</p>
+            <p style={{ marginTop: 6, fontSize: 11, color: 'var(--color-danger)' }}>
+              {errors.email.message}
+            </p>
           )}
         </div>
 
-        <Button type="submit" fullWidth loading={isSubmitting} size="lg">
+        <Button
+          type="submit"
+          fullWidth
+          loading={isSubmitting}
+          size="lg"
+          className="!bg-white !text-black hover:!bg-white/90"
+        >
           Enviar instrucciones
         </Button>
       </form>
+
     </AuthLayout>
   )
 }
