@@ -265,7 +265,7 @@ export function LandingProblem() {
       if (top > 0) return
       const maxScroll = el.offsetHeight - window.innerHeight
       const p = Math.max(0, -top / maxScroll)
-      if (p >= 0.20) startConverging()
+      if (p >= 0.15) startConverging()
     }
     window.addEventListener('scroll', check, { passive: true })
     return () => window.removeEventListener('scroll', check)
@@ -296,7 +296,7 @@ export function LandingProblem() {
       }
 
       // Scrolleó hacia arriba antes de que el texto apareciera — cancelar converge
-      if (!revealedRef.current && convergingRef.current && p < 0.16) {
+      if (!revealedRef.current && convergingRef.current && p < 0.11) {
         convergingRef.current      = false
         convergingStartRef.current = 0
         readyToRevealRef.current   = false
@@ -327,7 +327,7 @@ export function LandingProblem() {
       const { top } = el.getBoundingClientRect()
       if (top > 0) return
       if (e.deltaY > 0 && canConvergeRef.current && !convergingRef.current && !revealedRef.current) {
-        if (scrollProgressRef.current >= 0.20) startConverging()
+        if (scrollProgressRef.current >= 0.15) startConverging()
       }
     }
     window.addEventListener('wheel', onWheel, { passive: true })
@@ -361,7 +361,7 @@ export function LandingProblem() {
   void textRevealP
 
   return (
-    <div ref={wrapperRef} style={{ height: '700vh' }}>
+    <div ref={wrapperRef} style={{ height: '450vh' }}>
       <div style={{
         position: 'sticky', top: 0, height: '100vh',
         background: '#050505',

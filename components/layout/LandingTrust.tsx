@@ -1,575 +1,419 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 
-/* ─── Animated counter hook ─────────────────────────── */
-function useCounter(target: number, duration = 1600, start = false) {
-  const [value, setValue] = useState(0)
-  useEffect(() => {
-    if (!start) return
-    let raf: number
-    const startTime = performance.now()
-    const tick = (now: number) => {
-      const t = Math.min((now - startTime) / duration, 1)
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-      setValue(Math.round(eased * target))
-      if (t < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [start, target, duration])
-  return value
-}
+const ACCENT = '#4db888'
+const DIM    = 'rgba(255,255,255,0.22)'
 
-/* ─── Merkle node data ───────────────────────────────── */
-const TREE_NODES = [
-  { id: 'root', label: 'Merkle Root', hash: 'ae9f2b…4c7d', x: 300, y: 32, delay: '0.2s' },
-  { id: 'l1',   label: 'Nodo L',     hash: '3f9a2b…e8c4', x: 150, y: 132, delay: '0.5s' },
-  { id: 'r1',   label: 'Nodo R',     hash: 'd7c3f1…9a2e', x: 450, y: 132, delay: '0.5s' },
-  { id: 'll',   label: 'Cert 001',   hash: '8f4c2a…1b9d', x:  75, y: 232, delay: '0.8s' },
-  { id: 'lr',   label: 'Cert 002',   hash: 'c5e7b3…4f2a', x: 225, y: 232, delay: '0.8s' },
-  { id: 'rl',   label: 'Cert 003',   hash: '2d6a9c…7e1b', x: 375, y: 232, delay: '0.8s' },
-  { id: 'rr',   label: 'Cert 004',   hash: 'f1a3d5…8c2e', x: 525, y: 232, delay: '0.8s' },
+const FULL_HASH = '3f9a2b8e4c1d7a9f2e5b8c3d6a1f4e7b2c9d8f5a'
+
+const HEADLINE = [
+  'Cada documento que emitís',
+  'queda grabado para siempre',
+  'en la blockchain.',
+]
+const HEADLINE_TOTAL = HEADLINE.reduce((a, l) => a + l.length, 0)
+
+const PIPELINE = [
+  { step: '01', label: 'Documento',   sublabel: 'contrato_legal.pdf',      detail: 'Cualquier archivo',              accented: false },
+  { step: '02', label: 'SHA-256',     sublabel: '3f9a2b…4c1d',             detail: 'Hash único del archivo',         accented: false },
+  { step: '03', label: 'Merkle Leaf', sublabel: 'nodo #42 · batch #4821',  detail: 'Agrupado con otros certificados',accented: false },
+  { step: '04', label: 'Merkle Root', sublabel: 'ae9f2b…4c7d',             detail: 'Raíz que representa el batch',   accented: true  },
+  { step: '05', label: 'Solana TX',   sublabel: '5KJn8x…8fPr',             detail: 'Registrado en blockchain',       accented: true  },
 ]
 
-const TREE_LINES = [
-  { x1: 300, y1: 55, x2: 150, y2: 117, delay: '0s' },
-  { x1: 300, y1: 55, x2: 450, y2: 117, delay: '0.1s' },
-  { x1: 150, y1: 155, x2:  75, y2: 217, delay: '0.4s' },
-  { x1: 150, y1: 155, x2: 225, y2: 217, delay: '0.5s' },
-  { x1: 450, y1: 155, x2: 375, y2: 217, delay: '0.4s' },
-  { x1: 450, y1: 155, x2: 525, y2: 217, delay: '0.5s' },
-]
-
-const TERMINAL_LINES = [
-  { txt: '$ unickeys certify ./contrato_legal.pdf', color: 'rgba(255,255,255,0.5)', delay: '0s' },
-  { txt: '', color: '', delay: '0.2s' },
-  { txt: '  [hashing]   SHA-256...', color: 'rgba(255,255,255,0.3)', delay: '0.4s' },
-  { txt: '  → 3f9a2b8e4c1d7a9f2e5b8c3d6a1f4e7b2c9d8f5a', color: '#34d399', delay: '0.7s' },
-  { txt: '', color: '', delay: '0.9s' },
-  { txt: '  [batching]  Merkle tree #4821...', color: 'rgba(255,255,255,0.3)', delay: '1.1s' },
-  { txt: '  → root: ae9f2b8e4c1d7a9fc3d6a1f4e7b2c9d8f5a1', color: '#34d399', delay: '1.4s' },
-  { txt: '', color: '', delay: '1.6s' },
-  { txt: '  [broadcast] Solana mainnet...', color: 'rgba(255,255,255,0.3)', delay: '1.8s' },
-  { txt: '  → tx: 5KJn8xVpMzQ3Yak...8fPr ✓', color: '#34d399', delay: '2.1s' },
-  { txt: '', color: '', delay: '2.3s' },
-  { txt: '  Certificate ID: cert_4821_0042  [issued]', color: 'rgba(255,255,255,0.5)', delay: '2.5s' },
+const STATS = [
+  { value: '0',    label: 'falsificaciones\nposibles', note: 'garantía criptográfica', accent: true  },
+  { value: '<3s',  label: 'tiempo de\nverificación',   note: 'promedio en producción', accent: false },
+  { value: '10K+', label: 'certificados\npor tx',      note: 'árbol de Merkle',        accent: false },
 ]
 
 export function LandingTrust() {
   const sectionRef  = useRef<HTMLElement>(null)
-  const merkleRef   = useRef<HTMLDivElement>(null)
-  const terminalRef = useRef<HTMLDivElement>(null)
+  const headRef     = useRef<HTMLDivElement>(null)
   const statsRef    = useRef<HTMLDivElement>(null)
-  const [statsVisible,   setStatsVisible]   = useState(false)
-  const [merkleVisible,  setMerkleVisible]  = useState(false)
-  const [terminalVisible, setTerminalVisible] = useState(false)
+  const pipelineRef = useRef<HTMLDivElement>(null)
+  const hashRef     = useRef<HTMLDivElement>(null)
 
-  const certsCount = useCounter(10000, 1800, statsVisible)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const [headVisible,     setHeadVisible]     = useState(false)
+  const [headRevealed,    setHeadRevealed]    = useState(0)
+  const [statsVisible,    setStatsVisible]    = useState(false)
+  const [pipelineVisible, setPipelineVisible] = useState(false)
+  const [hashVisible,     setHashVisible]     = useState(false)
+  const [hashChars,       setHashChars]       = useState(0)
 
   useEffect(() => {
-    const makeIO = (cb: () => void, threshold = 0.25) =>
-      new IntersectionObserver(([e]) => { if (e.isIntersecting) { cb(); } }, { threshold })
+    const makeIO = (cb: () => void, threshold = 0.1) =>
+      new IntersectionObserver(([e]) => { if (e.isIntersecting) cb() }, { threshold })
 
-    const ioStats    = makeIO(() => setStatsVisible(true))
-    const ioMerkle   = makeIO(() => setMerkleVisible(true))
-    const ioTerminal = makeIO(() => setTerminalVisible(true), 0.15)
+    const ioHead     = makeIO(() => setHeadVisible(true), 0.5)
+    const ioStats    = makeIO(() => setStatsVisible(true),    0.15)
+    const ioPipeline = makeIO(() => setPipelineVisible(true), 0.1)
+    const ioHash     = makeIO(() => setHashVisible(true),     0.1)
 
+    if (headlineRef.current) ioHead.observe(headlineRef.current)
     if (statsRef.current)    ioStats.observe(statsRef.current)
-    if (merkleRef.current)   ioMerkle.observe(merkleRef.current)
-    if (terminalRef.current) ioTerminal.observe(terminalRef.current)
+    if (pipelineRef.current) ioPipeline.observe(pipelineRef.current)
+    if (hashRef.current)     ioHash.observe(hashRef.current)
 
-    return () => { ioStats.disconnect(); ioMerkle.disconnect(); ioTerminal.disconnect() }
+    return () => { ioHead.disconnect(); ioStats.disconnect(); ioPipeline.disconnect(); ioHash.disconnect() }
   }, [])
+
+  useEffect(() => {
+    if (!headVisible) return
+    let i = 0
+    const iv = setInterval(() => {
+      i++
+      setHeadRevealed(i)
+      if (i >= HEADLINE_TOTAL) clearInterval(iv)
+    }, 28)
+    return () => clearInterval(iv)
+  }, [headVisible])
+
+  useEffect(() => {
+    if (!hashVisible) return
+    let i = 0
+    const iv = setInterval(() => {
+      i++
+      setHashChars(i)
+      if (i >= FULL_HASH.length) clearInterval(iv)
+    }, 38)
+    return () => clearInterval(iv)
+  }, [hashVisible])
 
   return (
     <section
       ref={sectionRef}
       style={{
         background: '#050505',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
+        borderTop: '1px solid rgba(255,255,255,0.07)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          maxWidth: '1360px',
-          margin: '0 auto',
-          padding: 'clamp(80px, 10vw, 140px) clamp(24px, 6vw, 80px)',
-        }}
-      >
-        {/* ── Big headline ── */}
-        <div style={{ marginBottom: 'clamp(64px, 9vw, 100px)', maxWidth: '900px' }}>
-          <h2
-            className="font-display"
-            style={{
-              fontWeight: 300,
-              fontSize: 'clamp(44px, 6vw, 88px)',
-              lineHeight: 1.04,
-              color: 'rgba(255,255,255,0.38)',
-              margin: '0 0 24px',
-              letterSpacing: '-0.025em',
-            }}
-          >
-            Un hash.
-            <br />
-            <span style={{ color: '#fff' }}>
-              Para siempre.
+      {/* Graph-paper bg */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)
+        `,
+        backgroundSize: '48px 48px',
+      }} />
+
+      <div style={{
+        maxWidth: 1360,
+        margin: '0 auto',
+        padding: 'clamp(80px, 10vw, 140px) clamp(24px, 6vw, 80px)',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+
+        {/* ── Label strip ── */}
+        <div style={{
+          display: 'flex',
+          gap: 0,
+          marginBottom: 48,
+          fontFamily: 'var(--font-geist-mono)',
+          fontSize: 10,
+          letterSpacing: '0.12em',
+          color: DIM,
+          textTransform: 'uppercase',
+        }}>
+          {['SHA-256', 'Merkle Tree', 'Solana Mainnet', 'Inmutable'].map((tag, i) => (
+            <span key={tag} style={{ display: 'flex', alignItems: 'center' }}>
+              {i > 0 && (
+                <span style={{
+                  display: 'inline-block',
+                  width: 1, height: 10,
+                  background: 'rgba(255,255,255,0.1)',
+                  margin: '0 16px',
+                }} />
+              )}
+              {tag}
             </span>
+          ))}
+        </div>
+
+        {/* ── Headline ── */}
+        <div
+          ref={headRef}
+          style={{ marginBottom: 'clamp(56px, 7vw, 88px)' }}
+        >
+          <h2 ref={headlineRef} style={{
+            fontWeight: 200,
+            fontSize: 'clamp(32px, 4.5vw, 66px)',
+            lineHeight: 1.05,
+            margin: '0 0 24px',
+            letterSpacing: '-0.04em',
+          }}>
+            {(() => {
+              let idx = 0
+              return HEADLINE.map((line, li) => (
+                <span key={li} style={{ display: 'block' }}>
+                  {line.split('').map((ch, ci) => {
+                    const i = idx++
+                    return (
+                      <span key={ci} style={{
+                        color: headRevealed > i ? '#fff' : 'rgba(255,255,255,0.12)',
+                        transition: 'color 0.12s ease',
+                        whiteSpace: ch === ' ' ? 'pre' : undefined,
+                      }}>{ch}</span>
+                    )
+                  })}
+                </span>
+              ))
+            })()}
           </h2>
-          <p
-            style={{
-              fontSize: '16px',
-              lineHeight: 1.65,
-              color: 'rgba(255,255,255,0.32)',
-              maxWidth: '520px',
-              margin: 0,
-            }}
-          >
+          <p style={{
+            fontSize: 15,
+            lineHeight: 1.75,
+            color: 'rgba(255,255,255,0.28)',
+            maxWidth: 480,
+            margin: 0,
+            fontWeight: 300,
+          }}>
             Criptografía de grado militar aplicada a la certificación de documentos.
             Sin bases de datos centralizadas que hackear, sin autoridades que coaccionar.
           </p>
         </div>
 
-        {/* ── Stats row ── */}
+        {/* ── Horizontal rule ── */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 'clamp(48px, 6vw, 72px)' }} />
+
+        {/* ── Stats — tipografía pura, sin boxes ── */}
         <div
           ref={statsRef}
+          className="trust-stats"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '1px',
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            marginBottom: 'clamp(64px, 9vw, 100px)',
+            marginBottom: 'clamp(48px, 6vw, 72px)',
           }}
         >
-          {/* Stat 1 */}
-          <div
-            className="land-fadein"
-            style={{
-              background: '#050505',
-              padding: 'clamp(28px, 4vw, 48px)',
+          {STATS.map((stat, i) => (
+            <div key={stat.label} style={{
+              padding: 'clamp(20px, 2.5vw, 32px) clamp(16px, 2vw, 36px)',
+              borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
               opacity: statsVisible ? 1 : 0,
-              transition: 'opacity 0.8s ease 0s',
-            }}
-          >
-            <div
-              className="font-display"
-              style={{
-                fontWeight: 300,
-                fontSize: 'clamp(56px, 7vw, 96px)',
-                lineHeight: 0.9,
-                color: '#fff',
-                marginBottom: '16px',
+              transform: statsVisible ? 'translateY(0)' : 'translateY(16px)',
+              transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.7s ease ${i * 0.12}s`,
+            }}>
+              <div style={{
+                fontWeight: 200,
+                fontSize: 'clamp(48px, 5.5vw, 76px)',
+                lineHeight: 0.92,
                 letterSpacing: '-0.04em',
-              }}
-            >
-              0
-            </div>
-            <div
-              style={{
-                fontSize: '13px',
-                color: 'rgba(255,255,255,0.35)',
-                lineHeight: 1.5,
-                maxWidth: '200px',
-              }}
-            >
-              falsificaciones posibles
-            </div>
-            <div
-              style={{
-                marginTop: '16px',
+                color: stat.accent ? ACCENT : '#fff',
+                marginBottom: 14,
+              }}>
+                {stat.value}
+              </div>
+              <div style={{
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.28)',
+                lineHeight: 1.45,
+                marginBottom: 12,
+                whiteSpace: 'pre-line',
+              }}>
+                {stat.label}
+              </div>
+              <div style={{
                 fontFamily: 'var(--font-geist-mono)',
-                fontSize: '10px',
-                color: 'rgba(52,211,153,0.5)',
-                letterSpacing: '0.08em',
-              }}
-            >
-              garantía criptográfica absoluta
+                fontSize: 9,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: stat.accent ? 'rgba(77,184,136,0.5)' : 'rgba(255,255,255,0.14)',
+              }}>
+                {stat.note}
+              </div>
             </div>
-          </div>
-
-          {/* Stat 2 */}
-          <div
-            style={{
-              background: '#050505',
-              padding: 'clamp(28px, 4vw, 48px)',
-              opacity: statsVisible ? 1 : 0,
-              transition: 'opacity 0.8s ease 0.12s',
-            }}
-          >
-            <div
-              className="font-display"
-              style={{
-                fontWeight: 300,
-                fontSize: 'clamp(56px, 7vw, 96px)',
-                lineHeight: 0.9,
-                color: '#fff',
-                marginBottom: '16px',
-                letterSpacing: '-0.04em',
-              }}
-            >
-              <span style={{ fontSize: '0.5em', verticalAlign: '0.3em', color: 'rgba(255,255,255,0.4)' }}>&lt;</span>3s
-            </div>
-            <div
-              style={{
-                fontSize: '13px',
-                color: 'rgba(255,255,255,0.35)',
-                lineHeight: 1.5,
-                maxWidth: '200px',
-              }}
-            >
-              tiempo de verificación
-            </div>
-            <div
-              style={{
-                marginTop: '16px',
-                fontFamily: 'var(--font-geist-mono)',
-                fontSize: '10px',
-                color: 'rgba(255,255,255,0.18)',
-                letterSpacing: '0.08em',
-              }}
-            >
-              promedio global en producción
-            </div>
-          </div>
-
-          {/* Stat 3 */}
-          <div
-            style={{
-              background: '#050505',
-              padding: 'clamp(28px, 4vw, 48px)',
-              opacity: statsVisible ? 1 : 0,
-              transition: 'opacity 0.8s ease 0.24s',
-            }}
-          >
-            <div
-              className="font-display"
-              style={{
-                fontWeight: 300,
-                fontSize: 'clamp(56px, 7vw, 96px)',
-                lineHeight: 0.9,
-                color: '#fff',
-                marginBottom: '16px',
-                letterSpacing: '-0.04em',
-              }}
-            >
-              {statsVisible
-                ? certsCount >= 10000
-                  ? '10K'
-                  : certsCount.toLocaleString()
-                : '0'}
-            </div>
-            <div
-              style={{
-                fontSize: '13px',
-                color: 'rgba(255,255,255,0.35)',
-                lineHeight: 1.5,
-                maxWidth: '200px',
-              }}
-            >
-              certificados por transacción
-            </div>
-            <div
-              style={{
-                marginTop: '16px',
-                fontFamily: 'var(--font-geist-mono)',
-                fontSize: '10px',
-                color: 'rgba(255,255,255,0.18)',
-                letterSpacing: '0.08em',
-              }}
-            >
-              gracias al árbol de Merkle
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* ── Merkle tree + Terminal ── */}
-        <div
-          className="trust-grid"
-          style={{
+        {/* ── Horizontal rule ── */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 'clamp(48px, 6vw, 72px)' }} />
+
+        {/* ── Pipeline ── */}
+        <div ref={pipelineRef}>
+          <div style={{
+            fontFamily: 'var(--font-geist-mono)',
+            fontSize: 9,
+            letterSpacing: '0.14em',
+            color: DIM,
+            textTransform: 'uppercase',
+            marginBottom: 24,
+          }}>
+            Flujo de certificación — batch #4821
+          </div>
+
+          <div className="trust-pipeline" style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 'clamp(32px, 5vw, 64px)',
+            gridTemplateColumns: '1fr 28px 1fr 28px 1fr 28px 1fr 28px 1fr',
             alignItems: 'center',
-          }}
-        >
-          {/* Merkle SVG */}
-          <div
-            ref={merkleRef}
-            className={merkleVisible ? 'merkle-visible' : ''}
-            style={{
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: '12px',
-              padding: 'clamp(24px, 3vw, 40px)',
-              background: 'rgba(255,255,255,0.015)',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '24px',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'var(--font-geist-mono)',
-                  fontSize: '10px',
-                  letterSpacing: '0.14em',
-                  color: 'rgba(255,255,255,0.22)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Árbol de Merkle — Batch #4821
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-geist-mono)',
-                  fontSize: '9px',
-                  color: 'rgba(52,211,153,0.5)',
-                  letterSpacing: '0.06em',
-                }}
-              >
-                4 certificados
-              </span>
-            </div>
-
-            <svg
-              viewBox="0 0 600 300"
-              style={{ width: '100%', height: 'auto', overflow: 'visible' }}
-            >
-              {/* Lines */}
-              {TREE_LINES.map((line, i) => (
-                <line
-                  key={i}
-                  className="merkle-line"
-                  x1={line.x1}
-                  y1={line.y1}
-                  x2={line.x2}
-                  y2={line.y2}
-                  stroke="rgba(255,255,255,0.15)"
-                  strokeWidth="1"
-                  style={{
-                    animationDelay: merkleVisible ? line.delay : '0s',
-                    animationDuration: '0.6s',
-                  }}
-                />
-              ))}
-
-              {/* Nodes */}
-              {TREE_NODES.map((node) => {
-                const isRoot = node.id === 'root'
-                const isLeaf = ['ll','lr','rl','rr'].includes(node.id)
-                return (
-                  <g
-                    key={node.id}
-                    className="merkle-node"
-                    style={{
-                      animationDelay: merkleVisible ? node.delay : '0s',
-                    }}
-                  >
-                    <rect
-                      x={node.x - (isRoot ? 72 : isLeaf ? 56 : 64)}
-                      y={node.y - 18}
-                      width={isRoot ? 144 : isLeaf ? 112 : 128}
-                      height={36}
-                      rx="4"
-                      fill={isRoot ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.04)'}
-                      stroke={isRoot ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.1)'}
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={node.x}
-                      y={node.y - 4}
-                      textAnchor="middle"
-                      fill={isRoot ? 'rgba(52,211,153,0.8)' : 'rgba(255,255,255,0.4)'}
-                      fontSize="8"
-                      fontFamily="var(--font-geist-mono)"
-                      letterSpacing="0.05em"
-                    >
-                      {node.label}
-                    </text>
-                    <text
-                      x={node.x}
-                      y={node.y + 10}
-                      textAnchor="middle"
-                      fill={isRoot ? 'rgba(52,211,153,0.55)' : 'rgba(255,255,255,0.25)'}
-                      fontSize="8"
-                      fontFamily="var(--font-geist-mono)"
-                    >
-                      {node.hash}
-                    </text>
-                  </g>
-                )
-              })}
-            </svg>
-
-            {/* Solana tx below tree */}
-            <div
-              style={{
-                marginTop: '20px',
-                paddingTop: '16px',
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-              }}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                style={{ flexShrink: 0 }}
-              >
-                <circle cx="12" cy="12" r="10" stroke="rgba(52,211,153,0.4)" strokeWidth="1.5" />
-                <path
-                  d="M8 12l3 3 5-5"
-                  stroke="#34d399"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span
-                style={{
-                  fontFamily: 'var(--font-geist-mono)',
-                  fontSize: '10px',
-                  color: 'rgba(255,255,255,0.22)',
-                }}
-              >
-                Solana tx: 5KJn8xVpMzQ3Yak...8fPr
-              </span>
-              <span
-                style={{
-                  marginLeft: 'auto',
-                  fontFamily: 'var(--font-geist-mono)',
-                  fontSize: '9px',
-                  color: 'rgba(52,211,153,0.6)',
-                }}
-              >
-                confirmed ✓
-              </span>
-            </div>
-          </div>
-
-          {/* Terminal */}
-          <div
-            ref={terminalRef}
-            className={terminalVisible ? 'terminal-visible' : ''}
-          >
-            <h3
-              className="font-display"
-              style={{
-                fontWeight: 400,
-                fontSize: 'clamp(28px, 3.5vw, 44px)',
-                lineHeight: 1.1,
-                color: 'rgba(255,255,255,0.38)',
-                margin: '0 0 16px',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Emite en
-              <span style={{ color: '#fff' }}>
-                {' '}segundos.
-              </span>
-            </h3>
-            <p
-              style={{
-                fontSize: '14px',
-                color: 'rgba(255,255,255,0.3)',
-                lineHeight: 1.65,
-                margin: '0 0 28px',
-                maxWidth: '400px',
-              }}
-            >
-              Via API REST o desde el dashboard. Cualquier documento se convierte en
-              certificado blockchain en menos de 3 segundos.
-            </p>
-
-            {/* Terminal block */}
-            <div
-              style={{
-                background: '#0a0a0a',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '10px',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Terminal title bar */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '10px 14px',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                {['#ff5f57', '#ffbd2e', '#28c840'].map((c) => (
-                  <div
-                    key={c}
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      background: c,
-                      opacity: 0.7,
-                    }}
-                  />
-                ))}
-                <span
-                  style={{
-                    marginLeft: '8px',
+          }}>
+            {PIPELINE.map((step, i) => (
+              <Fragment key={step.step}>
+                <div style={{
+                  padding: 'clamp(16px, 2vw, 24px) clamp(12px, 1.5vw, 20px)',
+                  border: `1px solid ${step.accented ? 'rgba(77,184,136,0.22)' : 'rgba(255,255,255,0.07)'}`,
+                  borderRadius: 8,
+                  background: step.accented ? 'rgba(77,184,136,0.035)' : 'rgba(255,255,255,0.012)',
+                  opacity: pipelineVisible ? 1 : 0,
+                  transform: pipelineVisible ? 'translateY(0)' : 'translateY(12px)',
+                  transition: `opacity 0.6s ease ${i * 0.1}s, transform 0.6s ease ${i * 0.1}s`,
+                }}>
+                  <div style={{
                     fontFamily: 'var(--font-geist-mono)',
-                    fontSize: '10px',
-                    color: 'rgba(255,255,255,0.2)',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  unickeys-cli
-                </span>
-              </div>
+                    fontSize: 8,
+                    color: step.accented ? 'rgba(77,184,136,0.55)' : 'rgba(255,255,255,0.18)',
+                    letterSpacing: '0.1em',
+                    marginBottom: 10,
+                  }}>
+                    {step.step}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: step.accented ? ACCENT : 'rgba(255,255,255,0.72)',
+                    letterSpacing: '-0.01em',
+                    marginBottom: 5,
+                  }}>
+                    {step.label}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-geist-mono)',
+                    fontSize: 8,
+                    color: step.accented ? 'rgba(77,184,136,0.55)' : 'rgba(255,255,255,0.22)',
+                    marginBottom: 8,
+                  }}>
+                    {step.sublabel}
+                  </div>
+                  <div style={{
+                    fontSize: 10,
+                    color: 'rgba(255,255,255,0.18)',
+                    lineHeight: 1.4,
+                  }}>
+                    {step.detail}
+                  </div>
+                </div>
 
-              {/* Terminal lines */}
-              <div style={{ padding: '16px 18px' }}>
-                {TERMINAL_LINES.map((line, i) =>
-                  line.txt === '' ? (
-                    <div key={i} style={{ height: '8px' }} />
-                  ) : (
-                    <div
-                      key={i}
-                      className="terminal-line"
-                      style={{
-                        fontFamily: 'var(--font-geist-mono)',
-                        fontSize: '11px',
-                        color: line.color,
-                        lineHeight: '1.6',
-                        whiteSpace: 'pre',
-                        animationDelay: terminalVisible ? line.delay : '0s',
-                        animationDuration: '0.35s',
-                      }}
-                    >
-                      {line.txt}
-                    </div>
-                  )
+                {i < PIPELINE.length - 1 && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: pipelineVisible ? 1 : 0,
+                    transition: `opacity 0.5s ease ${i * 0.1 + 0.35}s`,
+                  }}>
+                    <svg width="20" height="10" viewBox="0 0 20 10" fill="none">
+                      <path
+                        d="M0 5 H16 M12 1.5 L18 5 L12 8.5"
+                        stroke="rgba(255,255,255,0.14)"
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
                 )}
-              </div>
-            </div>
+              </Fragment>
+            ))}
           </div>
         </div>
+
+        {/* ── Hash display ── */}
+        <div
+          ref={hashRef}
+          style={{
+            marginTop: 'clamp(32px, 4vw, 48px)',
+            padding: 'clamp(20px, 2.5vw, 32px) clamp(20px, 3vw, 36px)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 8,
+            background: 'rgba(255,255,255,0.008)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 24,
+            flexWrap: 'wrap',
+            opacity: hashVisible ? 1 : 0,
+            transition: 'opacity 0.9s ease',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontFamily: 'var(--font-geist-mono)',
+              fontSize: 9,
+              letterSpacing: '0.12em',
+              color: 'rgba(255,255,255,0.18)',
+              textTransform: 'uppercase',
+              marginBottom: 10,
+            }}>
+              SHA-256 — contrato_legal.pdf
+            </div>
+            <div style={{
+              fontFamily: 'var(--font-geist-mono)',
+              fontSize: 'clamp(12px, 1.3vw, 15px)',
+              color: ACCENT,
+              letterSpacing: '0.05em',
+              lineHeight: 1.4,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {FULL_HASH.slice(0, hashChars)}
+              {hashChars < FULL_HASH.length && (
+                <span style={{
+                  display: 'inline-block',
+                  width: '0.6ch', height: '1em',
+                  background: ACCENT,
+                  verticalAlign: 'text-bottom',
+                  animation: 'trust-blink 0.7s step-end infinite',
+                }} />
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: ACCENT,
+              boxShadow: `0 0 8px ${ACCENT}80`,
+            }} />
+            <span style={{
+              fontFamily: 'var(--font-geist-mono)',
+              fontSize: 9,
+              color: 'rgba(77,184,136,0.7)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}>
+              Inmutable · Verificable · Público
+            </span>
+          </div>
+        </div>
+
       </div>
 
-      {/* Responsive */}
       <style>{`
-        @media (max-width: 860px) {
-          .trust-grid { grid-template-columns: 1fr !important; }
+        @keyframes trust-blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
         }
-        @media (max-width: 640px) {
-          [data-stats-grid] { grid-template-columns: 1fr !important; }
+        @media (max-width: 1024px) {
+          .trust-pipeline {
+            grid-template-columns: 1fr 20px 1fr 20px 1fr !important;
+          }
+          .trust-pipeline > *:nth-child(n+7) { display: none !important; }
+        }
+        @media (max-width: 700px) {
+          .trust-pipeline {
+            grid-template-columns: 1fr !important;
+          }
+          .trust-pipeline > *:nth-child(even) { display: none !important; }
+          .trust-stats { grid-template-columns: 1fr !important; }
+          .trust-stats > div { border-left: none !important; border-top: 1px solid rgba(255,255,255,0.07) !important; }
+          .trust-stats > div:first-child { border-top: none !important; }
         }
       `}</style>
     </section>
