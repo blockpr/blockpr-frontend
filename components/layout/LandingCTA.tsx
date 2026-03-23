@@ -71,7 +71,7 @@ export function LandingCTA() {
         bottom: 0, left: '50%',
         transform: 'translateX(-50%)',
         width: '70%', height: '50%',
-        background: `radial-gradient(ellipse at center bottom, rgba(77,184,136,0.07) 0%, transparent 68%)`,
+        background: `radial-gradient(ellipse at center bottom, rgba(77,184,136,0.18) 0%, rgba(77,184,136,0.06) 40%, transparent 70%)`,
         pointerEvents: 'none',
       }} />
 
