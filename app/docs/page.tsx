@@ -11,7 +11,8 @@ const NAV_SECTIONS = [
   { id: 'autenticacion', label: 'Autenticación' },
   { id: 'base-url', label: 'Base URL' },
   { id: 'registrar', label: 'Registrar certificado' },
-  { id: 'verificar', label: 'Verificar certificado' },
+  { id: 'listar-api-key', label: 'Listar por API key' },
+  { id: 'consultar-publico', label: 'Consultar certificado público' },
   { id: 'errores', label: 'Códigos de error' },
   { id: 'notas', label: 'Notas importantes' },
 ]
@@ -171,16 +172,34 @@ export default function DocsPage() {
           {/* Autenticación */}
           <Section id="autenticacion" title="Autenticación">
             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-              Todas las peticiones requieren autenticación mediante API Key. Podés generar tus claves desde el{' '}
+              Esta API combina endpoints públicos y endpoints protegidos con API key. Podés generar tus claves desde el{' '}
               <Link href="/dashboard/api-keys" className="text-[var(--color-accent)] hover:underline">
                 panel de control
               </Link>.
             </p>
             <div className="border border-[var(--color-border)] bg-[var(--color-card)] rounded-[6px] p-5">
-              <p className="text-xs font-medium text-[var(--color-text-muted)] mb-3 uppercase tracking-wide">
-                Header requerido
-              </p>
-              <CodeBlock code="Authorization: Bearer YOUR_API_KEY" />
+              <p className="text-xs font-medium text-[var(--color-text-muted)] mb-3 uppercase tracking-wide">Modos soportados</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-2">
+                    Para <code>POST /public/certificates/hash</code>:
+                  </p>
+                  <CodeBlock code={`Authorization: Bearer YOUR_API_KEY
+o
+X-API-Key: YOUR_API_KEY`} />
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-2">
+                    Para <code>POST /public/certificates/by-api-key</code>:
+                  </p>
+                  <CodeBlock code={`{
+  "api_key": "bpk_..."
+}`} />
+                </div>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  <code>GET /public/certificates/:id</code> no requiere API key.
+                </p>
+              </div>
             </div>
           </Section>
 
@@ -265,61 +284,57 @@ export default function DocsPage() {
             </div>
           </Section>
 
-          {/* Verificar */}
-          <Section id="verificar" title="Verificar Certificado">
+          {/* Listar por API key */}
+          <Section id="listar-api-key" title="Listar Certificados por API key">
             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-              Valida un certificado subiendo un PDF. Calcula el hash y verifica si existe en la base de datos.
+              Devuelve todos los certificados del usuario asociado a la API key enviada en el body.
             </p>
             <div className="border border-[var(--color-border)] bg-[var(--color-card)] rounded-[6px] overflow-hidden">
               <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--color-border)]">
                 <MethodBadge method="POST" />
                 <code className="text-sm font-mono text-[var(--color-text-primary)]">
-                  /public/certificates/verify
+                  /public/certificates/by-api-key
                 </code>
               </div>
               <div className="p-5 space-y-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-                    Parámetros — multipart/form-data
-                  </p>
-                  <div className="flex items-start gap-3 text-sm">
-                    <code className="text-[var(--color-text-primary)] shrink-0 w-36">pdf</code>
-                    <span className="text-[var(--color-text-muted)] text-xs shrink-0 w-20">archivo</span>
-                    <span className="text-[var(--color-text-secondary)]">Archivo PDF a verificar</span>
-                    <span className="text-[10px] font-semibold text-[var(--color-danger)] ml-auto shrink-0">requerido</span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-                    Respuesta — 200 (válido)
+                    Body — application/json
                   </p>
                   <CodeBlock code={`{
-  "valid": true,
-  "certificate": {
-    "id": "uuid",
-    "document_hash": "sha256_hash",
-    "external_id": "optional",
-    "certificate_type": "optional",
-    "created_at": "2024-01-01T00:00:00Z",
-    "metadata": {}
-  },
-  "blockchain_transaction": {
-    "tx_hash": "solana_transaction_signature",
-    "explorer_url": "https://solscan.io/tx/...",
-    "status": "confirmed"
-  }
+  "api_key": "bpk_..."
 }`} />
                 </div>
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-                    Respuesta — 200 (no encontrado)
+                    Respuesta — 200
                   </p>
                   <CodeBlock code={`{
-  "valid": false,
-  "message": "Certificate not found",
-  "document_hash": "sha256_hash_calculado"
+  "certificates": [
+    {
+      "certificate": {
+        "id": "uuid",
+        "external_id": "optional",
+        "certificate_type": "optional",
+        "document_hash": "sha256_hash",
+        "metadata": {},
+        "verification_url": "https://.../verify/uuid",
+        "created_at": "2024-01-01T00:00:00Z"
+      },
+      "issuer": {
+        "company_name": "Empresa SA"
+      },
+      "blockchain": {
+        "transaction_signature": "solana_signature",
+        "explorer_url": "https://solscan.io/tx/...",
+        "blockchain": "solana",
+        "network": "mainnet",
+        "status": "confirmed",
+        "confirmed_at": "2024-01-01T00:00:30Z"
+      }
+    }
+  ]
 }`} />
                 </div>
 
@@ -327,9 +342,59 @@ export default function DocsPage() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
                     Ejemplo — cURL
                   </p>
-                  <CodeBlock code={`curl -X POST ${API_BASE}/public/certificates/verify \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -F "pdf=@certificado.pdf"`} />
+                  <CodeBlock code={`curl -X POST ${API_BASE}/public/certificates/by-api-key \\
+  -H "Content-Type: application/json" \\
+  -d '{"api_key":"bpk_..."}'`} />
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* Consultar público */}
+          <Section id="consultar-publico" title="Consultar Certificado Público">
+            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Obtiene un certificado puntual por ID sin autenticación. Es ideal para páginas de verificación pública.
+            </p>
+            <div className="border border-[var(--color-border)] bg-[var(--color-card)] rounded-[6px] overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--color-border)]">
+                <MethodBadge method="GET" />
+                <code className="text-sm font-mono text-[var(--color-text-primary)]">
+                  /public/certificates/{'{certificate_id}'}
+                </code>
+              </div>
+              <div className="p-5 space-y-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
+                    Respuesta — 200
+                  </p>
+                  <CodeBlock code={`{
+  "certificate": {
+    "id": "uuid",
+    "external_id": "optional",
+    "certificate_type": "optional",
+    "document_hash": "sha256_hash",
+    "metadata": {},
+    "verification_url": "https://.../verify/uuid",
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "issuer": {
+    "company_name": "Empresa SA"
+  },
+  "blockchain": {
+    "transaction_signature": "solana_signature",
+    "explorer_url": "https://solscan.io/tx/...",
+    "blockchain": "solana",
+    "network": "mainnet",
+    "status": "confirmed",
+    "confirmed_at": "2024-01-01T00:00:30Z"
+  }
+}`} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
+                    Ejemplo — cURL
+                  </p>
+                  <CodeBlock code={`curl ${API_BASE}/public/certificates/UUID_DEL_CERTIFICADO`} />
                 </div>
               </div>
             </div>
@@ -365,6 +430,7 @@ export default function DocsPage() {
                 'Las transacciones se registran en la blockchain de Solana usando el programa Memo',
                 <>Podés usar los campos <code className="text-[var(--color-text-primary)]">pdf</code>, <code className="text-[var(--color-text-primary)]">file</code> o <code className="text-[var(--color-text-primary)]">document</code> para enviar el archivo</>,
                 <>El campo <code className="text-[var(--color-text-primary)]">metadata</code> debe ser un string JSON válido</>,
+                <>Para <code className="text-[var(--color-text-primary)]">/public/certificates/hash</code> la API key va en header; para <code className="text-[var(--color-text-primary)]">/public/certificates/by-api-key</code> va en body como <code className="text-[var(--color-text-primary)]">api_key</code>.</>,
               ].map((note, i) => (
                 <div key={i} className="flex items-start gap-3 px-5 py-3.5 text-sm text-[var(--color-text-secondary)]">
                   <span className="mt-1.5 w-1 h-1 rounded-full bg-[var(--color-text-muted)] shrink-0" />
