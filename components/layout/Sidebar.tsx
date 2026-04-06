@@ -3,7 +3,7 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { SettingsModal, type SettingsSection } from '@/components/layout/settings/SettingsModal'
 import { useThemeStore } from '@/stores/themeStore'
@@ -59,6 +59,18 @@ export function Sidebar() {
 
   const [collapsed, setCollapsed] = useState(false)
   const [settingsSection, setSettingsSection] = useState<SettingsSection | null>(null)
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        setPopoverOpen(false)
+      }
+    }
+    if (popoverOpen) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [popoverOpen])
 
   // Active indicator
   const [indicator, setIndicator] = useState({ top: 0, height: 0, left: 0, width: 0 })
@@ -231,10 +243,64 @@ export function Sidebar() {
             </nav>
 
             {/* User card */}
-            <div className="px-2 py-3">
+            <div ref={cardRef} className="px-2 py-3 relative">
+              {/* Popover */}
+              {popoverOpen && (
+                <div className="absolute bottom-full left-2 right-2 mb-1.5 z-50 bg-[var(--color-card)] border border-[var(--color-border)] rounded-[8px] shadow-xl overflow-hidden">
+                  {/* Header usuario */}
+                  <div className="flex items-center gap-3 px-3 py-3 border-b border-[var(--color-border)]">
+                    <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-[var(--color-text-primary)] truncate leading-none mb-1">
+                        {footerPrimaryText}
+                      </p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] truncate leading-none">
+                        {footerSecondaryText}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Opciones */}
+                  <div className="py-1">
+                    {([
+                      { label: 'Perfil', section: 'perfil', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /> },
+                      { label: 'Seguridad', section: 'seguridad', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /> },
+                      { label: 'Suscripción', section: 'suscripcion', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /> },
+                    ] as { label: string; section: SettingsSection; icon: React.ReactNode }[]).map(({ label, section, icon }) => (
+                      <button
+                        key={section}
+                        onClick={() => { setPopoverOpen(false); setSettingsSection(section) }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card-hover)] transition-colors text-left"
+                      >
+                        <svg className="w-3.5 h-3.5 shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          {icon}
+                        </svg>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-[var(--color-border)]" />
+
+                  {/* Logout */}
+                  <div className="py-1">
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/login' })}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[var(--color-danger)] hover:bg-[var(--color-danger-muted)] transition-colors text-left"
+                    >
+                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                      </svg>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Card trigger */}
               <button
-                onClick={() => setSettingsSection('perfil')}
-                className="w-full flex items-center gap-3 px-3 py-5 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left rounded-[6px]"
+                onClick={() => setPopoverOpen((o) => !o)}
+                className="w-full flex items-center gap-3 px-3 py-3 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left rounded-[6px]"
               >
                 <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
                 <div className="flex-1 min-w-0">
@@ -245,8 +311,12 @@ export function Sidebar() {
                     {footerSecondaryText}
                   </p>
                 </div>
-                <svg className="w-3.5 h-3.5 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
+                <svg
+                  className="w-3.5 h-3.5 text-[var(--color-text-muted)] shrink-0 transition-transform duration-200"
+                  style={{ transform: popoverOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
                 </svg>
               </button>
             </div>

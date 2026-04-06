@@ -71,22 +71,6 @@ export function AuthLayout({
           <BrandLink />
         </div>
 
-        {/* Tagline — bottom left */}
-        <div style={{
-          position: 'absolute', bottom: 40, left: 40, right: 40,
-          zIndex: 2,
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-geist-mono)',
-            fontSize: 9,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.2)',
-            margin: '0 0 10px',
-          }}>
-            SHA-256 · Merkle Tree · Solana Mainnet
-          </p>
-        </div>
       </div>
 
       {/* ── Panel derecho: formulario ── */}

@@ -2,6 +2,7 @@
 
 import { getDeviceInfo } from '@/lib/device-utils'
 import { getUserSessions } from "@/lib/server-user-sessions"
+import type { UserSession } from "@/types"
 import { cn } from '@/lib/utils'
 import { useEffect, useMemo, useState } from "react"
 

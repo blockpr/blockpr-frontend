@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
@@ -33,7 +33,7 @@ function FieldError({ message }: { message?: string }) {
   return <p className="mt-1.5 text-xs text-[var(--color-danger)]">{message}</p>
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -161,5 +161,13 @@ export default function ResetPasswordPage() {
         </Button>
       </form>
     </AuthLayout>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }

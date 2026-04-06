@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AuthLayout } from '@/components/auth/AuthLayout'
@@ -8,7 +8,7 @@ import { authApi } from '@/lib/api'
 
 type State = 'loading' | 'success' | 'error'
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const [state, setState] = useState<State>('loading')
@@ -104,5 +104,13 @@ export default function VerifyEmailPage() {
         </Link>
       </div>
     </AuthLayout>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
