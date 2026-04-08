@@ -2,7 +2,7 @@ import { buildVerifyUrl } from '@/lib/utils'
 import type { Emission, EmissionStatus } from '@/types'
 
 const serverApiBase =
-  (typeof window === 'undefined' ? process.env.API_URL : undefined) ??
+  (typeof window === 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) ??
   process.env.NEXT_PUBLIC_API_URL ??
   'http://localhost:8000'
 
