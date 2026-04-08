@@ -139,7 +139,7 @@ function useScrambleCounter(target: string, triggered: boolean, delay: number) {
     if (!triggered) return
     const timeout = setTimeout(() => {
       const chars  = '0123456789'
-      const dur    = 1600
+      const dur    = 2800
       const start  = performance.now()
       const tick   = (now: number) => {
         const t    = Math.min(1, (now - start) / dur)
@@ -259,7 +259,7 @@ export function LandingStats() {
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => {
         const start = performance.now()
-        const dur   = 2400
+        const dur   = 3800
         const tick  = (now: number) => {
           const t    = Math.min(1, (now - start) / dur)
           const ease = 1 - Math.pow(1 - t, 3)

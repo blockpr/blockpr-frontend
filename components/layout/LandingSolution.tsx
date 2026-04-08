@@ -53,7 +53,7 @@ export function LandingSolution() {
   const cardsTriggered = scrollProgress >= 0.35
 
   return (
-    <div ref={wrapperRef} style={{ height: '300vh' }}>
+    <div id="soluciones" ref={wrapperRef} style={{ height: '300vh' }}>
       <div style={{
         position: 'sticky', top: 0, height: '100vh',
         background: '#050505',
@@ -146,30 +146,30 @@ export function LandingSolution() {
 
                 {/* Title */}
                 <div style={{
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: 400,
                   color: '#fff',
                   letterSpacing: '-0.01em',
                   lineHeight: 1.35,
-                  marginBottom: 10,
+                  marginBottom: 12,
                 }}>
                   {card.title}
                 </div>
 
                 {/* Subtitle */}
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'rgba(255,255,255,0.5)',
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  marginBottom: 16,
+                  marginBottom: 18,
                 }}>
                   {card.subtitle}
                 </div>
 
                 {/* Body */}
                 <div style={{
-                  fontSize: 13,
+                  fontSize: 16,
                   color: 'rgba(255,255,255,0.38)',
                   lineHeight: 1.75,
                   fontWeight: 300,

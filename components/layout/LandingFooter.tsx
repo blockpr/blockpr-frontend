@@ -1,47 +1,412 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useContactStore } from '@/stores/contactStore'
 
 const ACCENT = '#4db888'
 const DIM    = 'rgba(255,255,255,0.22)'
 
-const LINKS = [
-  {
-    label: 'Producto',
-    items: [
-      { name: 'Dashboard',      href: '/dashboard' },
-      { name: 'Emisiones',      href: '/dashboard/emissions' },
-      { name: 'Verificación',   href: '/verify' },
-      { name: 'API Keys',       href: '/dashboard/api-keys' },
-    ],
-  },
-  {
-    label: 'Developers',
-    items: [
-      { name: 'Documentación',  href: '/docs' },
-      { name: 'API Reference',  href: '/docs#api' },
-      { name: 'Webhooks',       href: '/docs#webhooks' },
-      { name: 'Changelog',      href: '/docs#changelog' },
-    ],
-  },
-  {
-    label: 'Compañía',
-    items: [
-      { name: 'Sobre nosotros', href: '#' },
-      { name: 'Blog',           href: '#' },
-      { name: 'Contacto',       href: '#' },
-    ],
-  },
-  {
-    label: 'Legal',
-    items: [
-      { name: 'Términos',       href: '#' },
-      { name: 'Privacidad',     href: '#' },
-      { name: 'Seguridad',      href: '#' },
-    ],
-  },
+const TOPICS = [
+  'Ventas',
+  'Soporte técnico',
+  'Integración / API',
+  'Prensa',
+  'Otro',
 ]
+
+// ── Topic Dropdown ────────────────────────────────────────────────────────────
+
+function TopicSelect({
+  value, onChange, focused, onFocus, onBlur,
+}: {
+  value: string
+  onChange: (v: string) => void
+  focused: boolean
+  onFocus: () => void
+  onBlur: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false)
+        onBlur()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open, onBlur])
+
+  const handleToggle = () => {
+    if (!open) { setOpen(true); onFocus() }
+    else        { setOpen(false); onBlur() }
+  }
+
+  const handleSelect = (v: string) => {
+    onChange(v)
+    setOpen(false)
+    onBlur()
+  }
+
+  return (
+    <div ref={rootRef} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={handleToggle}
+        style={{
+          width: '100%',
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: open ? '6px 6px 0 0' : 6,
+          padding: '11px 36px 11px 14px',
+          fontSize: 13,
+          color: value ? '#fff' : 'rgba(255,255,255,0.28)',
+          outline: 'none',
+          fontFamily: 'inherit',
+          fontWeight: 300,
+          letterSpacing: '-0.01em',
+          cursor: 'pointer',
+          textAlign: 'left',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          transition: 'border-color 0.2s',
+          boxSizing: 'border-box',
+        }}
+      >
+        <span>{value || 'Seleccioná un motivo'}</span>
+        <svg
+          width="10" height="6" viewBox="0 0 10 6" fill="none"
+          style={{
+            position: 'absolute', right: 14, top: '50%',
+            transform: open ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)',
+            transition: 'transform 0.2s',
+            pointerEvents: 'none',
+          }}
+        >
+          <path d="M1 1L5 5L9 1" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+          background: '#141414',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderTop: 'none',
+          borderRadius: '0 0 6px 6px',
+          overflow: 'hidden',
+        }}>
+          {TOPICS.map((t, i) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => handleSelect(t)}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                padding: '10px 14px',
+                fontSize: 13,
+                fontFamily: 'inherit',
+                fontWeight: 300,
+                letterSpacing: '-0.01em',
+                color: t === value ? ACCENT : 'rgba(255,255,255,0.65)',
+                background: 'none',
+                border: 'none',
+                borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                cursor: 'pointer',
+                transition: 'background 0.15s, color 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+                e.currentTarget.style.color = '#fff'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'none'
+                e.currentTarget.style.color = t === value ? ACCENT : 'rgba(255,255,255,0.65)'
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Contact Modal ─────────────────────────────────────────────────────────────
+
+function ContactModal({ onClose }: { onClose: () => void }) {
+  const [topic,   setTopic]   = useState('')
+  const [name,    setName]    = useState('')
+  const [email,   setEmail]   = useState('')
+  const [message, setMessage] = useState('')
+  const [sent,    setSent]    = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!topic) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, name, email, message }),
+      })
+      if (!res.ok) throw new Error()
+      setSent(true)
+    } catch {
+      setError('No se pudo enviar el mensaje. Intentá de nuevo.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const inputBase: React.CSSProperties = {
+    width: '100%',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.10)',
+    borderRadius: 6,
+    padding: '11px 14px',
+    fontSize: 13,
+    color: '#fff',
+    outline: 'none',
+    fontFamily: 'inherit',
+    fontWeight: 300,
+    letterSpacing: '-0.01em',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+  }
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 10,
+    letterSpacing: '0.13em',
+    textTransform: 'uppercase',
+    color: DIM,
+    marginBottom: 7,
+    fontWeight: 500,
+  }
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={e => { if (e.target === overlayRef.current) onClose() }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px',
+      }}
+    >
+      <div style={{
+        background: '#0d0d0d',
+        border: '1px solid rgba(255,255,255,0.09)',
+        borderRadius: 12,
+        padding: 'clamp(28px, 4vw, 40px)',
+        width: '100%',
+        maxWidth: 460,
+        marginTop: 60,
+        position: 'relative',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+      }}>
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: 16, right: 16,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'rgba(255,255,255,0.28)', padding: 4, lineHeight: 1,
+            fontSize: 18, transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.28)')}
+        >
+          ✕
+        </button>
+
+        {sent ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'rgba(77,184,136,0.12)',
+              border: `1px solid ${ACCENT}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+              fontSize: 20,
+            }}>
+              ✓
+            </div>
+            <p style={{ fontSize: 16, fontWeight: 300, color: '#fff', marginBottom: 8, letterSpacing: '-0.02em' }}>
+              Mensaje enviado
+            </p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.36)', fontWeight: 300 }}>
+              Te respondemos a la brevedad.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 28 }}>
+              <p style={{
+                fontSize: 9, letterSpacing: '0.16em', color: DIM,
+                textTransform: 'uppercase', marginBottom: 8, fontWeight: 500,
+              }}>
+                unickeys
+              </p>
+              <h2 style={{
+                fontSize: 22, fontWeight: 200, color: '#fff',
+                letterSpacing: '-0.04em', margin: 0,
+              }}>
+                Contacto
+              </h2>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+              {/* Topic */}
+              <div>
+                <label style={labelStyle}>Motivo</label>
+                <TopicSelect
+                  value={topic}
+                  onChange={setTopic}
+                  focused={focusedField === 'topic'}
+                  onFocus={() => setFocusedField('topic')}
+                  onBlur={() => setFocusedField(null)}
+                />
+              </div>
+
+              {/* Name */}
+              <div>
+                <label style={labelStyle}>Nombre completo</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Juan García"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  onFocus={() => setFocusedField('name')}
+                  onBlur={() => setFocusedField(null)}
+                  style={{
+                    ...inputBase,
+                    borderColor: focusedField === 'name' ? ACCENT : 'rgba(255,255,255,0.10)',
+                  }}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label style={labelStyle}>Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="juan@empresa.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  style={{
+                    ...inputBase,
+                    borderColor: focusedField === 'email' ? ACCENT : 'rgba(255,255,255,0.10)',
+                  }}
+                />
+              </div>
+
+              {/* Message */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>Mensaje</label>
+                  <span style={{
+                    fontSize: 10, letterSpacing: '0.06em',
+                    color: message.length > 360
+                      ? message.length >= 400 ? '#e05252' : '#d4a83a'
+                      : 'rgba(255,255,255,0.18)',
+                    transition: 'color 0.2s',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>
+                    {message.length}/400
+                  </span>
+                </div>
+                <textarea
+                  required
+                  maxLength={400}
+                  placeholder="Contanos en qué podemos ayudarte..."
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  onFocus={() => setFocusedField('message')}
+                  onBlur={() => setFocusedField(null)}
+                  rows={4}
+                  style={{
+                    ...inputBase,
+                    borderColor: focusedField === 'message' ? ACCENT : 'rgba(255,255,255,0.10)',
+                    resize: 'none',
+                    lineHeight: 1.6,
+                  }}
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <p style={{ fontSize: 12, color: '#e05252', margin: 0, letterSpacing: '-0.01em' }}>
+                  {error}
+                </p>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  marginTop: 4,
+                  background: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '12px 24px',
+                  fontSize: 12,
+                  letterSpacing: '0.10em',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  color: '#050505',
+                  cursor: loading ? 'default' : 'pointer',
+                  fontFamily: 'inherit',
+                  opacity: loading ? 0.5 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.75' }}
+                onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}
+              >
+                {loading ? 'Enviando...' : 'Enviar mensaje'}
+              </button>
+
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ── Mini hero canvas ──────────────────────────────────────────────────────────
 
@@ -232,136 +597,206 @@ function FooterWordmark() {
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 
+const LINKS = [
+  {
+    label: 'Producto',
+    items: [
+      { name: 'Dashboard',      href: '/dashboard',           modal: false },
+      { name: 'Emisiones',      href: '/dashboard/emissions', modal: false },
+      { name: 'Verificación',   href: '/verify',              modal: false },
+      { name: 'API Keys',       href: '/dashboard/api-keys',  modal: false },
+    ],
+  },
+  {
+    label: 'Developers',
+    items: [
+      { name: 'Documentación',  href: '/docs',          modal: false },
+      { name: 'API Reference',  href: '/docs#api',       modal: false },
+      { name: 'Webhooks',       href: '/docs#webhooks',  modal: false },
+      { name: 'Changelog',      href: '/docs#changelog', modal: false },
+    ],
+  },
+  {
+    label: 'Compañía',
+    items: [
+      { name: 'Sobre nosotros', href: '/about', modal: false },
+      { name: 'Blog',           href: '/blog',  modal: false },
+      { name: 'Contacto',       href: '#',      modal: true  },
+    ],
+  },
+  {
+    label: 'Legal',
+    items: [
+      { name: 'Términos',   href: '/terms',   modal: false },
+      { name: 'Privacidad', href: '/privacy', modal: false },
+      { name: 'Seguridad',  href: '#',        modal: false },
+    ],
+  },
+]
+
+const linkStyle: React.CSSProperties = {
+  fontSize: 13, color: 'rgba(255,255,255,0.32)', textDecoration: 'none',
+  letterSpacing: '-0.01em',
+  backgroundImage: 'linear-gradient(currentColor, currentColor)',
+  backgroundSize: '0% 1px',
+  backgroundPosition: '0 100%',
+  backgroundRepeat: 'no-repeat',
+  transition: 'color 0.2s ease, background-size 0.3s ease',
+  cursor: 'pointer',
+  backgroundColor: 'transparent',
+  border: 'none',
+  padding: 0,
+  fontFamily: 'inherit',
+  fontWeight: 'inherit',
+}
+
 export function LandingFooter() {
+  const { isOpen: contactOpen, open: openContact, close: closeContact } = useContactStore()
+
   return (
-    <footer style={{ background: '#050505', position: 'relative', overflow: 'hidden' }}>
+    <>
+      {contactOpen && <ContactModal onClose={closeContact} />}
 
-      {/* Graph-paper bg */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: `
-          linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)
-        `,
-        backgroundSize: '48px 48px',
-      }} />
+      <footer style={{ background: '#050505', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Top rule */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
-
-      {/* Links + info */}
-      <div style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '0 clamp(24px, 5vw, 80px)',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-
+        {/* Graph-paper bg */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto',
-          gap: 'clamp(32px, 6vw, 100px)',
-          alignItems: 'start',
-          padding: 'clamp(40px, 6vw, 64px) 0 clamp(32px, 5vw, 56px)',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+        }} />
+
+        {/* Top rule */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+
+        {/* Links + info */}
+        <div style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          padding: '0 clamp(24px, 5vw, 80px)',
+          position: 'relative',
+          zIndex: 1,
         }}>
 
-          {/* Left — logo + tagline + status */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <svg width="16" height="16" viewBox="0 0 200 200" fill="none">
-                <path d="M100 100V42" stroke="white" strokeWidth="4" strokeLinecap="round" />
-                <path d="M100 100L148 128" stroke="white" strokeWidth="4" strokeLinecap="round" />
-                <path d="M100 100L52 128" stroke="white" strokeWidth="4" strokeLinecap="round" />
-                <circle cx="100" cy="100" r="10" fill="white" />
-                <circle cx="100" cy="42" r="8" fill="white" />
-                <circle cx="148" cy="128" r="8" fill="white" />
-                <circle cx="52" cy="128" r="8" fill="white" />
-              </svg>
-              <span style={{ fontSize: 11, letterSpacing: '0.14em', color: DIM, textTransform: 'uppercase' }}>
-                unickeys
-              </span>
-            </div>
-
-            {/* Mini wordmark canvas */}
-            <div style={{ width: 360, height: 120, marginBottom: 16 }}>
-              <FooterWordmark />
-            </div>
-
-            <p style={{
-              fontSize: 13, color: 'rgba(255,255,255,0.28)',
-              lineHeight: 1.7, margin: '0 0 24px', fontWeight: 300, maxWidth: 260,
-            }}>
-              Infraestructura de certificados verificables para empresas. Inmutable, auditable, confiable.
-            </p>
-
-          </div>
-
-          {/* Right — link columns */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 'clamp(28px, 3.5vw, 52px)',
+            gridTemplateColumns: '1fr auto',
+            gap: 'clamp(32px, 6vw, 100px)',
             alignItems: 'start',
+            padding: 'clamp(40px, 6vw, 64px) 0 clamp(32px, 5vw, 56px)',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
           }}>
-            {LINKS.map(col => (
-              <div key={col.label}>
-                <div style={{
-                  fontSize: 9, letterSpacing: '0.16em', color: DIM,
-                  textTransform: 'uppercase', marginBottom: 18, fontWeight: 500,
-                }}>
-                  {col.label}
-                </div>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
-                  {col.items.map(item => (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        style={{
-                          fontSize: 13, color: 'rgba(255,255,255,0.32)', textDecoration: 'none',
-                          letterSpacing: '-0.01em',
-                          backgroundImage: 'linear-gradient(currentColor, currentColor)',
-                          backgroundSize: '0% 1px',
-                          backgroundPosition: '0 calc(100% + 1px)',
-                          backgroundRepeat: 'no-repeat',
-                          transition: 'color 0.2s ease, background-size 0.3s ease',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.color = '#fff'
-                          e.currentTarget.style.backgroundPosition = '0 calc(100% + 1px)'
-                          e.currentTarget.style.backgroundSize = '100% 1px'
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.color = 'rgba(255,255,255,0.32)'
-                          e.currentTarget.style.backgroundPosition = '100% calc(100% + 1px)'
-                          e.currentTarget.style.backgroundSize = '0% 1px'
-                        }}
-                      >
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+
+            {/* Left — logo + tagline */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <svg width="16" height="16" viewBox="0 0 200 200" fill="none">
+                  <path d="M100 100V42" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M100 100L148 128" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M100 100L52 128" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                  <circle cx="100" cy="100" r="10" fill="white" />
+                  <circle cx="100" cy="42" r="8" fill="white" />
+                  <circle cx="148" cy="128" r="8" fill="white" />
+                  <circle cx="52" cy="128" r="8" fill="white" />
+                </svg>
+                <span style={{ fontSize: 11, letterSpacing: '0.14em', color: DIM, textTransform: 'uppercase' }}>
+                  unickeys
+                </span>
               </div>
-            ))}
+
+              {/* Mini wordmark canvas */}
+              <div style={{ width: 360, height: 120, marginBottom: 16 }}>
+                <FooterWordmark />
+              </div>
+
+              <p style={{
+                fontSize: 13, color: 'rgba(255,255,255,0.28)',
+                lineHeight: 1.7, margin: '0 0 24px', fontWeight: 300, maxWidth: 260,
+              }}>
+                Infraestructura de certificados verificables para empresas. Inmutable, auditable, confiable.
+              </p>
+            </div>
+
+            {/* Right — link columns */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 'clamp(28px, 3.5vw, 52px)',
+              alignItems: 'start',
+            }}>
+              {LINKS.map(col => (
+                <div key={col.label}>
+                  <div style={{
+                    fontSize: 9, letterSpacing: '0.16em', color: DIM,
+                    textTransform: 'uppercase', marginBottom: 18, fontWeight: 500,
+                  }}>
+                    {col.label}
+                  </div>
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
+                    {col.items.map(item => (
+                      <li key={item.name}>
+                        {item.modal ? (
+                          <button
+                            onClick={openContact}
+                            style={linkStyle}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.color = '#fff'
+                              e.currentTarget.style.backgroundImage = 'linear-gradient(currentColor, currentColor)'
+                              e.currentTarget.style.backgroundPosition = '0 100%'
+                              e.currentTarget.style.backgroundSize = '100% 1px'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.color = 'rgba(255,255,255,0.32)'
+                              e.currentTarget.style.backgroundPosition = '100% 100%'
+                              e.currentTarget.style.backgroundSize = '0% 1px'
+                            }}
+                          >
+                            {item.name}
+                          </button>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            style={linkStyle}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.color = '#fff'
+                              e.currentTarget.style.backgroundPosition = '0 100%'
+                              e.currentTarget.style.backgroundSize = '100% 1px'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.color = 'rgba(255,255,255,0.32)'
+                              e.currentTarget.style.backgroundPosition = '100% 100%'
+                              e.currentTarget.style.backgroundSize = '0% 1px'
+                            }}
+                          >
+                            {item.name}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Bottom bar */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '22px 0', gap: 16, flexWrap: 'wrap',
-        }}>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.08em' }}>
-            unickeys © 2025 — B2B certificate infrastructure
-          </span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.10)', letterSpacing: '0.06em' }}>
-            SHA-256 · Merkle Tree · Solana · SOC2 in progress
-          </span>
-        </div>
+          {/* Bottom bar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '22px 0', gap: 16, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.08em' }}>
+              unickeys © 2025 — B2B certificate infrastructure
+            </span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.10)', letterSpacing: '0.06em' }}>
+              SHA-256 · Merkle Tree · Solana · SOC2 in progress
+            </span>
+          </div>
 
-      </div>
-    </footer>
+        </div>
+      </footer>
+    </>
   )
 }

@@ -84,6 +84,7 @@ export function LandingTrust() {
 
   return (
     <section
+      id="seguridad"
       ref={sectionRef}
       style={{
         background: '#050505',
