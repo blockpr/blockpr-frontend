@@ -402,7 +402,15 @@ export default function BlogPostPage() {
   const article = ARTICLES[slug]
 
   const [mounted, setMounted] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
   useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   if (!mounted) return null
 
@@ -485,72 +493,93 @@ export default function BlogPostPage() {
         maxWidth: 1200, margin: '0 auto',
         padding: 'clamp(48px, 7vw, 96px) clamp(24px, 5vw, 80px)',
         display: 'grid',
-        gridTemplateColumns: '220px 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : '220px 1fr',
         gap: 'clamp(40px, 6vw, 96px)',
         alignItems: 'start',
       }}>
 
-        {/* Sidebar */}
-        <aside style={{ position: 'sticky', top: 100 }}>
-          {headings.length > 0 && (
-            <nav>
-              <p style={{
-                fontSize: 10, letterSpacing: '0.16em', color: DIM,
-                textTransform: 'uppercase', marginBottom: 20,
-              }}>
-                Contenido
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {headings.map(h => (
-                  <a key={h.id} href={`#${h.id}`} style={{
-                    fontSize: 12, color: 'rgba(255,255,255,0.35)',
-                    textDecoration: 'none', lineHeight: 1.5,
-                    padding: '6px 0 6px 12px',
-                    borderLeft: '1px solid rgba(255,255,255,0.07)',
-                    transition: 'color 0.2s ease, border-color 0.2s ease',
-                  }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.color = '#fff'
-                      e.currentTarget.style.borderLeftColor = ACCENT
+        {/* Sidebar — desktop only */}
+        {!isMobile && (
+          <aside style={{ position: 'sticky', top: 100 }}>
+            {headings.length > 0 && (
+              <nav>
+                <p style={{
+                  fontSize: 10, letterSpacing: '0.16em', color: DIM,
+                  textTransform: 'uppercase', marginBottom: 20,
+                }}>
+                  Contenido
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {headings.map(h => (
+                    <a key={h.id} href={`#${h.id}`} style={{
+                      fontSize: 12, color: 'rgba(255,255,255,0.35)',
+                      textDecoration: 'none', lineHeight: 1.5,
+                      padding: '6px 0 6px 12px',
+                      borderLeft: '1px solid rgba(255,255,255,0.07)',
+                      transition: 'color 0.2s ease, border-color 0.2s ease',
                     }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.35)'
-                      e.currentTarget.style.borderLeftColor = 'rgba(255,255,255,0.07)'
-                    }}
-                  >
-                    {h.text}
-                  </a>
-                ))}
-              </div>
-            </nav>
-          )}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.color = '#fff'
+                        e.currentTarget.style.borderLeftColor = ACCENT
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.35)'
+                        e.currentTarget.style.borderLeftColor = 'rgba(255,255,255,0.07)'
+                      }}
+                    >
+                      {h.text}
+                    </a>
+                  ))}
+                </div>
+              </nav>
+            )}
 
-          <div style={{ marginTop: 48, borderTop: RULE, paddingTop: 32 }}>
-            <p style={{ fontSize: 11, color: DIM, lineHeight: 1.6, marginBottom: 20 }}>
-              ¿Querés implementar esto en tu empresa?
-            </p>
-            <Link href="/signup" style={{
-              display: 'block', textAlign: 'center',
-              background: '#fff', color: '#000',
-              fontSize: 12, fontWeight: 500,
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '12px 20px', borderRadius: 6,
-              textDecoration: 'none',
-              transition: 'opacity 0.2s ease',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              Comenzar gratis
-            </Link>
-          </div>
-        </aside>
+            <div style={{ marginTop: 48, borderTop: RULE, paddingTop: 32 }}>
+              <p style={{ fontSize: 11, color: DIM, lineHeight: 1.6, marginBottom: 20 }}>
+                ¿Querés implementar esto en tu empresa?
+              </p>
+              <Link href="/signup" style={{
+                display: 'block', textAlign: 'center',
+                background: '#fff', color: '#000',
+                fontSize: 12, fontWeight: 500,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '12px 20px', borderRadius: 6,
+                textDecoration: 'none',
+                transition: 'opacity 0.2s ease',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Comenzar gratis
+              </Link>
+            </div>
+          </aside>
+        )}
 
         {/* Article */}
-        <article style={{ maxWidth: 680 }}>
+        <article style={{ maxWidth: isMobile ? '100%' : 680 }}>
           {article.blocks.map((block, i) => (
             <ArticleBlock key={i} block={block} />
           ))}
+
+          {/* Mobile CTA — after article */}
+          {isMobile && (
+            <div style={{ marginTop: 48, paddingTop: 32, borderTop: RULE }}>
+              <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, marginBottom: 20, fontWeight: 300 }}>
+                ¿Querés implementar esto en tu empresa?
+              </p>
+              <Link href="/signup" style={{
+                display: 'block', textAlign: 'center',
+                background: '#fff', color: '#000',
+                fontSize: 12, fontWeight: 500,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '14px 20px', borderRadius: 6,
+                textDecoration: 'none',
+              }}>
+                Comenzar gratis
+              </Link>
+            </div>
+          )}
         </article>
       </div>
 
@@ -567,7 +596,7 @@ export default function BlogPostPage() {
               </p>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 2 }}>
               {related.map((p, i) => (
                 <RelatedCard key={p.slug} post={p} index={i} />
               ))}

@@ -32,6 +32,14 @@ const CARDS = [
 export function LandingSolution() {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const onScroll = () => {
@@ -48,14 +56,15 @@ export function LandingSolution() {
   }, [])
 
   const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v))
-  const op = clamp(scrollProgress / 0.12)
-  const y  = (1 - op) * 32
-  const cardsTriggered = scrollProgress >= 0.35
+  const op = isMobile ? 1 : clamp(scrollProgress / 0.12)
+  const y  = isMobile ? 0 : (1 - op) * 32
+  const cardsTriggered = isMobile ? true : scrollProgress >= 0.35
 
   return (
-    <div id="soluciones" ref={wrapperRef} style={{ height: '300vh' }}>
+    <div id="soluciones" ref={wrapperRef} style={{ height: isMobile ? 'auto' : '300vh' }}>
       <div style={{
-        position: 'sticky', top: 0, height: '100vh',
+        position: isMobile ? 'relative' : 'sticky', top: 0,
+        height: isMobile ? 'auto' : '100vh',
         background: '#050505',
         overflow: 'hidden',
         display: 'flex',
@@ -78,7 +87,7 @@ export function LandingSolution() {
           transform: `translateY(${y + 25}px)`,
           width: '100%',
           maxWidth: 1200,
-          padding: '0 clamp(24px, 5vw, 80px)',
+          padding: isMobile ? 'clamp(40px, 8vw, 64px) 20px' : '0 clamp(24px, 5vw, 80px)',
         }}>
           {/* Top rule + logo */}
           <div style={{
@@ -118,14 +127,17 @@ export function LandingSolution() {
           {/* Columns */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
             borderTop: '1px solid rgba(255,255,255,0.07)',
           }}>
             {CARDS.map((card, i) => (
               <div key={i} style={{
-                padding: '32px 32px 32px 0',
-                paddingLeft: i === 0 ? 0 : 32,
-                borderLeft: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                paddingTop: isMobile ? 24 : 32,
+                paddingBottom: 32,
+                paddingRight: isMobile ? 0 : 32,
+                paddingLeft: isMobile ? 0 : (i === 0 ? 0 : 32),
+                borderLeft: isMobile ? 'none' : (i === 0 ? 'none' : '1px solid rgba(255,255,255,0.07)'),
+                borderTop: isMobile && i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
                 opacity: cardsTriggered ? 1 : 0,
                 transform: cardsTriggered ? 'translateY(0)' : 'translateY(20px)',
                 transition: `opacity 0.8s ease ${i * 0.15}s, transform 0.8s ease ${i * 0.15}s`,

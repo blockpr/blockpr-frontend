@@ -151,7 +151,15 @@ function ContactModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -215,37 +223,61 @@ function ContactModal({ onClose }: { onClose: () => void }) {
       onClick={e => { if (e.target === overlayRef.current) onClose() }}
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.72)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px',
+        background: isMobile ? '#0d0d0d' : 'rgba(0,0,0,0.72)',
+        backdropFilter: isMobile ? 'none' : 'blur(6px)',
+        display: 'flex',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        justifyContent: 'center',
+        padding: 0,
+        overflowY: isMobile ? 'auto' : 'hidden',
       }}
     >
       <div style={{
         background: '#0d0d0d',
-        border: '1px solid rgba(255,255,255,0.09)',
-        borderRadius: 12,
-        padding: 'clamp(28px, 4vw, 40px)',
+        border: isMobile ? 'none' : '1px solid rgba(255,255,255,0.09)',
+        borderRadius: isMobile ? 0 : 12,
+        padding: isMobile ? '80px 24px 48px' : 'clamp(28px, 4vw, 40px)',
         width: '100%',
-        maxWidth: 460,
-        marginTop: 60,
+        maxWidth: isMobile ? '100%' : 460,
+        minHeight: isMobile ? '100dvh' : 'auto',
+        maxHeight: isMobile ? 'none' : 'calc(100dvh - 80px)',
+        overflowY: isMobile ? 'visible' : 'auto',
+        marginTop: isMobile ? 0 : 60,
         position: 'relative',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+        boxShadow: isMobile ? 'none' : '0 32px 80px rgba(0,0,0,0.6)',
       }}>
 
         {/* Close */}
         <button
           onClick={onClose}
           style={{
-            position: 'absolute', top: 16, right: 16,
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'rgba(255,255,255,0.28)', padding: 4, lineHeight: 1,
-            fontSize: 18, transition: 'color 0.2s',
+            position: 'fixed',
+            top: isMobile ? 20 : 16,
+            left: isMobile ? 20 : 'auto',
+            right: isMobile ? 'auto' : 16,
+            background: isMobile ? 'rgba(255,255,255,0.07)' : 'none',
+            border: 'none', cursor: 'pointer',
+            color: 'rgba(255,255,255,0.5)',
+            padding: isMobile ? '8px 14px' : 4,
+            lineHeight: 1,
+            borderRadius: isMobile ? 8 : 0,
+            fontSize: isMobile ? 13 : 18,
+            letterSpacing: isMobile ? '0.04em' : 0,
+            transition: 'color 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6,
+            zIndex: 10,
           }}
           onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.28)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
         >
-          ✕
+          {isMobile ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 19l-7-7 7-7" />
+              </svg>
+              Volver
+            </>
+          ) : '✕'}
         </button>
 
         {sent ? (
@@ -652,6 +684,14 @@ const linkStyle: React.CSSProperties = {
 
 export function LandingFooter() {
   const { isOpen: contactOpen, open: openContact, close: closeContact } = useContactStore()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   return (
     <>
@@ -683,8 +723,8 @@ export function LandingFooter() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            gap: 'clamp(32px, 6vw, 100px)',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr auto',
+            gap: isMobile ? 32 : 'clamp(32px, 6vw, 100px)',
             alignItems: 'start',
             padding: 'clamp(40px, 6vw, 64px) 0 clamp(32px, 5vw, 56px)',
             borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -707,10 +747,12 @@ export function LandingFooter() {
                 </span>
               </div>
 
-              {/* Mini wordmark canvas */}
-              <div style={{ width: 360, height: 120, marginBottom: 16 }}>
-                <FooterWordmark />
-              </div>
+              {/* Mini wordmark canvas — oculto en mobile */}
+              {!isMobile && (
+                <div style={{ width: 360, height: 120, marginBottom: 16 }}>
+                  <FooterWordmark />
+                </div>
+              )}
 
               <p style={{
                 fontSize: 13, color: 'rgba(255,255,255,0.28)',
@@ -723,8 +765,8 @@ export function LandingFooter() {
             {/* Right — link columns */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 'clamp(28px, 3.5vw, 52px)',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+              gap: isMobile ? '28px 20px' : 'clamp(28px, 3.5vw, 52px)',
               alignItems: 'start',
             }}>
               {LINKS.map(col => (

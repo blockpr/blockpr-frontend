@@ -208,6 +208,14 @@ function useFadeIn(threshold = 0.08) {
 
 export default function TermsPage() {
   const [activeId, setActiveId] = useState('aceptacion')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -257,7 +265,7 @@ export default function TermsPage() {
             color: DIM, textTransform: 'uppercase', marginBottom: 40,
           }}>Legal</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'flex-end', gap: 40 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 40, flexWrap: 'wrap' }}>
             <h1 style={{
               fontSize: 'clamp(32px, 5vw, 70px)',
               fontWeight: 200, letterSpacing: '-0.04em',
@@ -266,15 +274,17 @@ export default function TermsPage() {
               Términos y condiciones<br />
               <span style={{ color: ACCENT }}>de uso.</span>
             </h1>
-            <p style={{
-              fontSize: 11, color: DIM,
-              letterSpacing: '0.1em', textTransform: 'uppercase',
-              textAlign: 'right', paddingBottom: 6,
-              whiteSpace: 'nowrap',
-            }}>
-              Vigente desde<br />
-              <span style={{ color: 'rgba(255,255,255,0.45)' }}>Abril 2026</span>
-            </p>
+            {!isMobile && (
+              <p style={{
+                fontSize: 11, color: DIM,
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                textAlign: 'right', paddingBottom: 6,
+                whiteSpace: 'nowrap',
+              }}>
+                Vigente desde<br />
+                <span style={{ color: 'rgba(255,255,255,0.45)' }}>Abril 2026</span>
+              </p>
+            )}
           </div>
         </div>
       </header>
@@ -285,55 +295,57 @@ export default function TermsPage() {
         maxWidth: 1200, margin: '0 auto',
         padding: 'clamp(48px, 7vw, 96px) clamp(24px, 5vw, 80px)',
         display: 'grid',
-        gridTemplateColumns: '220px 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : '220px 1fr',
         gap: 'clamp(40px, 6vw, 96px)',
         alignItems: 'start',
       }}>
 
-        {/* Sidebar TOC */}
-        <aside style={{ position: 'sticky', top: 100 }}>
-          <p style={{
-            fontSize: 10, letterSpacing: '0.16em', color: DIM,
-            textTransform: 'uppercase', marginBottom: 20,
-          }}>
-            Secciones
-          </p>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {SECTIONS.map(s => {
-              const isActive = activeId === s.id
-              return (
-                <a key={s.id} href={`#${s.id}`} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '7px 0 7px 12px',
-                  borderLeft: `1px solid ${isActive ? ACCENT : 'rgba(255,255,255,0.07)'}`,
-                  textDecoration: 'none',
-                  transition: 'border-color 0.2s ease',
-                }}>
-                  <span style={{
-                    fontSize: 9, letterSpacing: '0.08em',
-                    color: isActive ? ACCENT : 'rgba(255,255,255,0.2)',
-                    fontVariantNumeric: 'tabular-nums',
-                    transition: 'color 0.2s ease',
-                    flexShrink: 0,
+        {/* Sidebar TOC — desktop only */}
+        {!isMobile && (
+          <aside style={{ position: 'sticky', top: 100 }}>
+            <p style={{
+              fontSize: 10, letterSpacing: '0.16em', color: DIM,
+              textTransform: 'uppercase', marginBottom: 20,
+            }}>
+              Secciones
+            </p>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {SECTIONS.map(s => {
+                const isActive = activeId === s.id
+                return (
+                  <a key={s.id} href={`#${s.id}`} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '7px 0 7px 12px',
+                    borderLeft: `1px solid ${isActive ? ACCENT : 'rgba(255,255,255,0.07)'}`,
+                    textDecoration: 'none',
+                    transition: 'border-color 0.2s ease',
                   }}>
-                    {s.num}
-                  </span>
-                  <span style={{
-                    fontSize: 11,
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.3)',
-                    lineHeight: 1.4,
-                    transition: 'color 0.2s ease',
-                  }}>
-                    {s.title}
-                  </span>
-                </a>
-              )
-            })}
-          </nav>
-        </aside>
+                    <span style={{
+                      fontSize: 9, letterSpacing: '0.08em',
+                      color: isActive ? ACCENT : 'rgba(255,255,255,0.2)',
+                      fontVariantNumeric: 'tabular-nums',
+                      transition: 'color 0.2s ease',
+                      flexShrink: 0,
+                    }}>
+                      {s.num}
+                    </span>
+                    <span style={{
+                      fontSize: 11,
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.3)',
+                      lineHeight: 1.4,
+                      transition: 'color 0.2s ease',
+                    }}>
+                      {s.title}
+                    </span>
+                  </a>
+                )
+              })}
+            </nav>
+          </aside>
+        )}
 
         {/* Content */}
-        <div style={{ maxWidth: 680 }}>
+        <div style={{ maxWidth: isMobile ? '100%' : 680 }}>
           {SECTIONS.map((section, i) => (
             <Section key={section.id} section={section} isLast={i === SECTIONS.length - 1} />
           ))}

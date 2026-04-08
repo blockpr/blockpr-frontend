@@ -37,6 +37,14 @@ export function LandingProblem() {
 
   const [textVisible,    setTextVisible]    = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [isMobile,       setIsMobile]       = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const resetAll = () => {
     setTextVisible(false)
@@ -150,14 +158,14 @@ export function LandingProblem() {
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '0 48px',
+          padding: isMobile ? '0 20px' : '0 48px',
           pointerEvents: cardsProgress > 0.05 ? 'auto' : 'none',
           zIndex: 2,
         }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 24,
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? 14 : 24,
             maxWidth: 1200,
             width: '100%',
           }}>
@@ -167,7 +175,7 @@ export function LandingProblem() {
                   opacity: cardsTriggered ? 1 : 0,
                   transform: cardsTriggered ? 'translateY(0px)' : 'translateY(32px)',
                   transition: `opacity 0.8s ease ${i * 0.22}s, transform 0.8s ease ${i * 0.22}s`,
-                  padding: '40px 36px',
+                  padding: isMobile ? '24px 20px' : '40px 36px',
                   borderRadius: 12,
                   border: '1px solid rgba(255,255,255,0.07)',
                   background: 'rgba(255,255,255,0.02)',
@@ -176,19 +184,19 @@ export function LandingProblem() {
                   <span style={{
                     display: 'inline-block',
                     fontSize: 14, letterSpacing: '0.08em',
-                    color: '#000', marginBottom: 32,
+                    color: '#000', marginBottom: isMobile ? 16 : 32,
                     background: 'rgba(255,255,255,0.55)',
                     border: '1px solid rgba(255,255,255,0.07)',
                     borderRadius: 6,
                     padding: '4px 10px',
                   }}>{p.num}</span>
                   <p style={{
-                    fontSize: 20, fontWeight: 400, color: '#fff',
-                    margin: '0 0 18px', letterSpacing: '-0.03em', lineHeight: 1.25,
+                    fontSize: isMobile ? 17 : 20, fontWeight: 400, color: '#fff',
+                    margin: '0 0 12px', letterSpacing: '-0.03em', lineHeight: 1.25,
                   }}>{p.title}</p>
                   <p style={{
-                    fontSize: 18, color: 'rgba(255,255,255,0.7)',
-                    lineHeight: 1.75, margin: 0, fontWeight: 300,
+                    fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.7)',
+                    lineHeight: 1.7, margin: 0, fontWeight: 300,
                   }}>{p.body}</p>
                 </div>
               )

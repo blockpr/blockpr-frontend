@@ -174,6 +174,7 @@ export function LandingNavbar() {
   const [dropWidth, setDropWidth]   = useState(540)
   const [menuOpen, setMenuOpen]     = useState(false)
   const [isMobile, setIsMobile]     = useState(false)
+  const openContactModal            = useContactStore(s => s.open)
 
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const btnRefs    = useRef<Partial<Record<DropKey, HTMLButtonElement>>>({})
@@ -369,16 +370,46 @@ export function LandingNavbar() {
                   {DROP_LABELS[key]}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {CONFIGS[key].items.map(item => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setMenuOpen(false)}
-                      style={{ fontSize: 18, color: '#fff', textDecoration: 'none', padding: '8px 0', fontWeight: 300, letterSpacing: '-0.02em' }}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  {CONFIGS[key].items.map(item => {
+                    const itemStyle: React.CSSProperties = { fontSize: 18, color: '#fff', textDecoration: 'none', padding: '8px 0', fontWeight: 300, letterSpacing: '-0.02em', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }
+                    if (item.modal) return (
+                      <button
+                        key={item.label}
+                        onClick={() => { setMenuOpen(false); openContactModal() }}
+                        style={itemStyle}
+                      >
+                        {item.label}
+                      </button>
+                    )
+                    if (item.scrollId) return (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          setMenuOpen(false)
+                          const el = document.getElementById(item.scrollId!)
+                          if (el) {
+                            const top = el.getBoundingClientRect().top + window.scrollY + window.innerHeight * (item.scrollOffset ?? 0)
+                            window.scrollTo({ top, behavior: 'smooth' })
+                          } else {
+                            window.location.href = `/#${item.scrollId}`
+                          }
+                        }}
+                        style={itemStyle}
+                      >
+                        {item.label}
+                      </button>
+                    )
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        style={{ fontSize: 18, color: '#fff', textDecoration: 'none', padding: '8px 0', fontWeight: 300, letterSpacing: '-0.02em' }}
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             ))}

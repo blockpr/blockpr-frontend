@@ -114,8 +114,8 @@ export default function DocsPage() {
   return (
     <div data-theme={theme === 'dark' ? undefined : theme} className="flex h-screen bg-[var(--color-base)] overflow-hidden">
 
-      {/* Sidebar */}
-      <aside className="w-60 shrink-0 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)]">
+      {/* Sidebar — hidden on mobile */}
+      <aside className="hidden md:flex w-60 shrink-0 flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)]">
         {/* Header */}
         <div className="h-16 flex items-center px-4 shrink-0">
           <Link
@@ -164,19 +164,47 @@ export default function DocsPage() {
       </aside>
 
       {/* Content */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto">
+      <div ref={contentRef} className="flex-1 min-w-0 overflow-y-auto">
         {/* Top bar */}
-        <div className="h-16 flex items-center justify-center px-8 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-10 relative">
+        <div className="h-16 flex items-center justify-center px-4 md:px-8 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-10 relative">
+          <div className="absolute left-4 md:hidden">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm" style={{ color: titleColor }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Dashboard
+            </Link>
+          </div>
           <h1 className="text-base font-normal" style={{ color: titleColor }}>
             Documentación
           </h1>
-          <div className="absolute right-8">
+          <div className="absolute right-4 md:right-8">
             <HeaderMenu />
           </div>
         </div>
 
+        {/* Mobile section nav */}
+        <div className="md:hidden overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex gap-1 px-4 py-2 min-w-max">
+            {NAV_SECTIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => scrollTo(id)}
+                className={`shrink-0 px-3 py-1.5 rounded-md text-xs transition-colors ${
+                  activeSection === id
+                    ? 'bg-[var(--color-nav-active-bg)] text-[var(--color-nav-active-text)] font-medium'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Body */}
-        <div className="max-w-3xl mx-auto px-8 py-8 space-y-12">
+        <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 space-y-12">
 
           {/* Autenticación */}
           <Section id="autenticacion" title="Autenticación">
@@ -243,12 +271,12 @@ X-API-Key: YOUR_API_KEY`} />
                       { name: 'certificate_type', type: 'string', desc: 'Tipo de certificado', required: false },
                       { name: 'metadata', type: 'JSON string', desc: 'Metadatos adicionales', required: false },
                     ].map((p) => (
-                      <div key={p.name} className="flex items-start gap-3 text-sm">
-                        <code className="text-[var(--color-text-primary)] shrink-0 w-36">{p.name}</code>
-                        <span className="text-[var(--color-text-muted)] text-xs shrink-0 w-20">{p.type}</span>
-                        <span className="text-[var(--color-text-secondary)]">{p.desc}</span>
+                      <div key={p.name} className="flex flex-wrap items-start gap-x-3 gap-y-0.5 text-sm">
+                        <code className="text-[var(--color-text-primary)] shrink-0 w-32">{p.name}</code>
+                        <span className="text-[var(--color-text-muted)] text-xs shrink-0 w-16 hidden sm:block">{p.type}</span>
+                        <span className="text-[var(--color-text-secondary)] flex-1 min-w-0">{p.desc}</span>
                         {p.required && (
-                          <span className="text-[10px] font-semibold text-[var(--color-danger)] ml-auto shrink-0">
+                          <span className="text-[10px] font-semibold text-[var(--color-danger)] shrink-0">
                             requerido
                           </span>
                         )}

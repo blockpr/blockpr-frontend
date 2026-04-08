@@ -173,11 +173,12 @@ function useScrambleCounter(target: string, triggered: boolean, delay: number) {
 // ─── Metric card ─────────────────────────────────────────────────────────────
 
 function MetricCard({
-  metric, triggered, index,
+  metric, triggered, index, isMobile,
 }: {
   metric: typeof METRICS[0]
   triggered: boolean
   index: number
+  isMobile: boolean
 }) {
   const display = useScrambleCounter(metric.display, triggered, index * 180)
   const isHero  = metric.hero
@@ -187,8 +188,10 @@ function MetricCard({
       display:       'flex',
       flexDirection: 'column',
       justifyContent:'flex-end',
-      padding:       isHero ? '0 0 0 48px' : '0',
-      borderLeft:    isHero ? `1px solid rgba(255,255,255,0.08)` : 'none',
+      padding:       isHero && !isMobile ? '0 0 0 48px' : '0',
+      borderLeft:    isHero && !isMobile ? `1px solid rgba(255,255,255,0.08)` : 'none',
+      borderTop:     isHero && isMobile ? '1px solid rgba(255,255,255,0.08)' : 'none',
+      paddingTop:    isHero && isMobile ? '32px' : undefined,
       opacity:       triggered ? 1 : 0,
       transform:     triggered ? 'translateY(0)' : 'translateY(20px)',
       transition:    `opacity 0.9s ease ${index * 0.15}s, transform 0.9s ease ${index * 0.15}s`,
@@ -237,6 +240,14 @@ export function LandingStats() {
   const [triggered, setTriggered] = useState(false)
   const [hoverIdx,  setHoverIdx]  = useState(-1)
   const [tooltip,   setTooltip]   = useState<{ x: number; y: number; text: string } | null>(null)
+  const [isMobile,  setIsMobile]  = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   const chartDoneRef = useRef(false)
   const animRef      = useRef<number | undefined>(undefined)
 
@@ -320,7 +331,7 @@ export function LandingStats() {
       {/* Metrics row */}
       <div style={{
         display:       'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
         gap:           0,
         padding:       'clamp(48px, 8vw, 96px) clamp(24px, 5vw, 80px)',
         paddingBottom: 'clamp(40px, 6vw, 72px)',
@@ -328,7 +339,7 @@ export function LandingStats() {
         zIndex:        1,
       }}>
         {METRICS.map((m, i) => (
-          <MetricCard key={m.id} metric={m} triggered={triggered} index={i} />
+          <MetricCard key={m.id} metric={m} triggered={triggered} index={i} isMobile={isMobile} />
         ))}
       </div>
 
@@ -372,10 +383,12 @@ export function LandingStats() {
           justifyContent: 'space-between',
           padding:        '10px clamp(24px, 5vw, 80px) clamp(32px, 5vw, 56px)',
         }}>
-          {MONTHS.map(m => (
-            <span key={m} style={{ fontSize: 10, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              {m}
-            </span>
+          {MONTHS.map((m, i) => (
+            (!isMobile || i % 2 === 0) && (
+              <span key={m} style={{ fontSize: 10, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {m}
+              </span>
+            )
           ))}
         </div>
       </div>

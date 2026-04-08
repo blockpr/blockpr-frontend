@@ -29,6 +29,14 @@ export function LandingCTA() {
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const [triggered, setTriggered] = useState(false)
   const [revealed,  setRevealed]  = useState(0)
+  const [isMobile,  setIsMobile]  = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -158,9 +166,10 @@ export function LandingCTA() {
         {/* ── Bottom row: copy izq + botones der ── */}
         <div style={{
           display: 'flex',
-          alignItems: 'flex-end',
+          alignItems: isMobile ? 'flex-start' : 'flex-end',
+          flexDirection: isMobile ? 'column' : 'row',
           justifyContent: 'space-between',
-          gap: 48,
+          gap: isMobile ? 32 : 48,
           flexWrap: 'wrap',
           opacity: triggered ? 1 : 0,
           transform: triggered ? 'translateY(0)' : 'translateY(16px)',
@@ -197,8 +206,9 @@ export function LandingCTA() {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'flex-end',
+            alignItems: isMobile ? 'stretch' : 'flex-end',
             gap: 14,
+            width: isMobile ? '100%' : 'auto',
           }}>
             <Link href="/signup" style={{
               padding: '14px 32px',
@@ -210,12 +220,14 @@ export function LandingCTA() {
               letterSpacing: '0.01em',
               textDecoration: 'none',
               whiteSpace: 'nowrap',
+              textAlign: isMobile ? 'center' : undefined,
             }}>
               Empezar gratis →
             </Link>
             <Link href="/docs" style={{
               display: 'inline-flex',
               alignItems: 'center',
+              justifyContent: isMobile ? 'center' : undefined,
               gap: 8,
               padding: '11px 20px',
               border: '1px solid rgba(255,255,255,0.1)',

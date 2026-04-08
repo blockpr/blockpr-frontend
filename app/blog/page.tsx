@@ -138,6 +138,14 @@ function useFadeIn(threshold = 0.1) {
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('Todo')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const filtered = activeCategory === 'Todo'
     ? POSTS
@@ -148,6 +156,7 @@ export default function BlogPage() {
 
   return (
     <main style={{ background: '#050505', minHeight: '100vh', overflowX: 'clip' }}>
+      <style>{`.blog-filter-bar::-webkit-scrollbar { display: none; }`}</style>
 
       {/* Grid paper bg */}
       <div style={{
@@ -204,11 +213,13 @@ export default function BlogPage() {
       </section>
 
       {/* ── Filtros ───────────────────────────────────────────────────────────── */}
-      <div style={{ position: 'relative', zIndex: 1, borderBottom: RULE }}>
+      <div className="blog-filter-bar" style={{ position: 'relative', zIndex: 1, borderBottom: RULE, overflowX: isMobile ? 'auto' : 'visible', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
         <div style={{
-          maxWidth: 1200, margin: '0 auto',
-          padding: '0 clamp(24px, 5vw, 80px)',
+          maxWidth: isMobile ? 'none' : 1200, margin: '0 auto',
+          padding: isMobile ? '0 clamp(24px, 5vw, 80px)' : '0 clamp(24px, 5vw, 80px)',
           display: 'flex', gap: 0,
+          minWidth: isMobile ? 'max-content' : 'auto',
+          scrollbarWidth: 'none',
         }}>
           {CATEGORIES.map(cat => (
             <button
@@ -216,14 +227,15 @@ export default function BlogPage() {
               onClick={() => setActiveCategory(cat)}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                padding: '20px 24px',
+                padding: isMobile ? '16px 16px' : '20px 24px',
                 fontSize: 11, letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 color: activeCategory === cat ? '#fff' : DIM,
                 borderBottom: 'none',
-                transition: 'color 0.2s ease, border-color 0.2s ease',
+                transition: 'color 0.2s ease',
                 whiteSpace: 'nowrap',
                 marginBottom: -1,
+                fontFamily: 'inherit',
               }}
             >
               {cat}
@@ -236,10 +248,10 @@ export default function BlogPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: 'clamp(48px, 6vw, 80px) clamp(24px, 5vw, 80px)' }}>
 
         {/* Featured post */}
-        {featured && <FeaturedPost post={featured} />}
+        {featured && <FeaturedPost post={featured} isMobile={isMobile} />}
 
         {/* Rest */}
-        {rest.length > 0 && <PostsGrid posts={rest} />}
+        {rest.length > 0 && <PostsGrid posts={rest} isMobile={isMobile} />}
 
       </div>
 
@@ -250,7 +262,7 @@ export default function BlogPage() {
 
 // ─── Featured post ────────────────────────────────────────────────────────────
 
-function FeaturedPost({ post }: { post: typeof POSTS[0] }) {
+function FeaturedPost({ post, isMobile }: { post: typeof POSTS[0]; isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
   const [hovered, setHovered] = useState(false)
 
@@ -267,7 +279,7 @@ function FeaturedPost({ post }: { post: typeof POSTS[0] }) {
           onMouseLeave={() => setHovered(false)}
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 380px',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 380px',
             border: RULE,
             background: hovered ? 'rgba(255,255,255,0.02)' : 'transparent',
             transition: 'background 0.3s ease',
@@ -276,19 +288,16 @@ function FeaturedPost({ post }: { post: typeof POSTS[0] }) {
         >
           {/* Left */}
           <div style={{
-            padding: 'clamp(40px, 5vw, 64px)',
-            borderRight: RULE,
+            padding: isMobile ? '32px 24px' : 'clamp(40px, 5vw, 64px)',
+            borderRight: isMobile ? 'none' : RULE,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            minHeight: 320,
+            minHeight: isMobile ? 'auto' : 320,
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-                <span style={{
-                  fontSize: 10, letterSpacing: '0.14em',
-                  color: ACCENT, textTransform: 'uppercase',
-                }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                <span style={{ fontSize: 10, letterSpacing: '0.14em', color: ACCENT, textTransform: 'uppercase' }}>
                   {post.category}
                 </span>
                 <span style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.12)' }} />
@@ -298,9 +307,9 @@ function FeaturedPost({ post }: { post: typeof POSTS[0] }) {
               </div>
 
               <h2 style={{
-                fontSize: 'clamp(22px, 2.8vw, 38px)',
+                fontSize: 'clamp(20px, 2.8vw, 38px)',
                 fontWeight: 200, letterSpacing: '-0.03em',
-                lineHeight: 1.12, color: '#fff', margin: '0 0 24px',
+                lineHeight: 1.12, color: '#fff', margin: '0 0 20px',
               }}>
                 {post.title}
               </h2>
@@ -314,39 +323,33 @@ function FeaturedPost({ post }: { post: typeof POSTS[0] }) {
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 40 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 32 }}>
               <span style={{ fontSize: 11, color: DIM, letterSpacing: '0.08em' }}>{post.date}</span>
               <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.1)' }} />
               <span style={{ fontSize: 11, color: DIM, letterSpacing: '0.08em' }}>{post.readTime} lectura</span>
               <span style={{
-                marginLeft: 'auto',
-                fontSize: 11, letterSpacing: '0.08em',
-                color: hovered ? ACCENT : DIM,
-                transition: 'color 0.2s ease',
+                marginLeft: 'auto', fontSize: 11, letterSpacing: '0.08em',
+                color: hovered ? ACCENT : DIM, transition: 'color 0.2s ease',
               }}>
                 Leer →
               </span>
             </div>
           </div>
 
-          {/* Right — index number */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 40,
-          }}>
-            <span style={{
-              fontSize: 'clamp(80px, 12vw, 160px)',
-              fontWeight: 200,
-              letterSpacing: '-0.06em',
-              color: hovered ? ACCENT : 'rgba(255,255,255,0.05)',
-              fontVariantNumeric: 'tabular-nums',
-              lineHeight: 1,
-              transition: 'color 0.3s ease',
-              userSelect: 'none',
-            }}>
-              01
-            </span>
-          </div>
+          {/* Right — index number, desktop only */}
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+              <span style={{
+                fontSize: 'clamp(80px, 12vw, 160px)',
+                fontWeight: 200, letterSpacing: '-0.06em',
+                color: hovered ? ACCENT : 'rgba(255,255,255,0.05)',
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1, transition: 'color 0.3s ease', userSelect: 'none',
+              }}>
+                01
+              </span>
+            </div>
+          )}
         </div>
       </Link>
     </div>
@@ -355,30 +358,31 @@ function FeaturedPost({ post }: { post: typeof POSTS[0] }) {
 
 // ─── Posts grid ───────────────────────────────────────────────────────────────
 
-function PostsGrid({ posts }: { posts: typeof POSTS }) {
+function PostsGrid({ posts, isMobile }: { posts: typeof POSTS; isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
 
   return (
     <div ref={ref} style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
       gap: 2,
       marginTop: 2,
     }}>
       {posts.map((post, i) => (
-        <PostCard key={post.slug} post={post} index={i + 2} visible={visible} delay={i * 0.1} />
+        <PostCard key={post.slug} post={post} index={i + 2} visible={visible} delay={i * 0.1} isMobile={isMobile} />
       ))}
     </div>
   )
 }
 
 function PostCard({
-  post, index, visible, delay,
+  post, index, visible, delay, isMobile,
 }: {
   post: typeof POSTS[0]
   index: number
   visible: boolean
   delay: number
+  isMobile: boolean
 }) {
   const [hovered, setHovered] = useState(false)
 
@@ -389,7 +393,7 @@ function PostCard({
         onMouseLeave={() => setHovered(false)}
         style={{
           border: RULE,
-          padding: '36px 32px',
+          padding: isMobile ? '24px 20px' : '36px 32px',
           background: hovered ? 'rgba(255,255,255,0.02)' : 'transparent',
           transition: `background 0.3s ease, opacity 0.8s ease ${delay}s, transform 0.8s ease ${delay}s`,
           opacity: visible ? 1 : 0,

@@ -117,7 +117,7 @@ export function LandingHero() {
 
     function buildTextNodes(cx: number, cy: number, sc: number) {
       const logoBot  = cy + (128 - 100) / 100 * sc * 0.56
-      const fontSize = Math.round(Math.min(W, H) * 0.255)
+      const fontSize = Math.round(W < 768 ? W * 0.21 : Math.min(W, H) * 0.255)
       const textCY   = logoBot + fontSize * 0.80
       const STEP     = 4
 

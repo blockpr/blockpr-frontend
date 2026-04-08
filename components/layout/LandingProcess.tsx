@@ -123,6 +123,14 @@ const STEPS = [
 export function LandingProcess() {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [triggered, setTriggered] = useState(false)
+  const [isMobile,  setIsMobile]  = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -162,8 +170,12 @@ export function LandingProcess() {
 
         {/* Header row */}
         <div style={{
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-          marginBottom: 56,
+          display: 'flex',
+          alignItems: isMobile ? 'flex-start' : 'flex-end',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          marginBottom: isMobile ? 40 : 56,
+          gap: isMobile ? 12 : 0,
           opacity: triggered ? 1 : 0,
           transform: triggered ? 'translateY(0)' : 'translateY(16px)',
           transition: 'opacity 0.8s ease, transform 0.8s ease',
@@ -174,7 +186,7 @@ export function LandingProcess() {
             </div>
             <h2 style={{
               fontWeight: 200,
-              fontSize: 'clamp(36px, 4.5vw, 64px)',
+              fontSize: 'clamp(32px, 4.5vw, 64px)',
               lineHeight: 1.05,
               color: '#fff',
               margin: 0,
@@ -184,24 +196,29 @@ export function LandingProcess() {
               <span style={{ color: ACCENT }}>en 3 pasos.</span>
             </h2>
           </div>
-          <div style={{
-            fontSize: 10, letterSpacing: '0.14em', color: DIM,
-            textTransform: 'uppercase', textAlign: 'right', lineHeight: 1.8,
-          }}>
-            SHA-256<br />Merkle Tree<br />Solana
-          </div>
+          {!isMobile && (
+            <div style={{
+              fontSize: 10, letterSpacing: '0.14em', color: DIM,
+              textTransform: 'uppercase', textAlign: 'right', lineHeight: 1.8,
+            }}>
+              SHA-256<br />Merkle Tree<br />Solana
+            </div>
+          )}
         </div>
 
         {/* Divider */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 0 }} />
 
         {/* Steps grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)' }}>
           {STEPS.map((step, i) => (
             <div key={step.num} style={{
-              padding: '40px 32px 40px 0',
-              paddingLeft: i === 0 ? 0 : 32,
-              borderLeft: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.07)',
+              paddingTop: isMobile ? 32 : 40,
+              paddingBottom: isMobile ? 32 : 40,
+              paddingRight: isMobile ? 0 : 32,
+              paddingLeft: isMobile ? 0 : (i === 0 ? 0 : 32),
+              borderLeft: isMobile ? 'none' : (i === 0 ? 'none' : '1px solid rgba(255,255,255,0.07)'),
+              borderTop: isMobile && i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
               opacity: triggered ? 1 : 0,
               transform: triggered ? 'translateY(0)' : 'translateY(24px)',
               transition: `opacity 0.8s ease ${0.1 + i * 0.15}s, transform 0.8s ease ${0.1 + i * 0.15}s`,
@@ -265,8 +282,12 @@ export function LandingProcess() {
 
         {/* CTA inline */}
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display: 'flex',
+          alignItems: isMobile ? 'flex-start' : 'center',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
           padding: '32px 0',
+          gap: isMobile ? 16 : 0,
           opacity: triggered ? 1 : 0,
           transition: 'opacity 0.8s ease 0.6s',
         }}>

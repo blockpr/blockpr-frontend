@@ -88,6 +88,14 @@ function useFadeIn(threshold = 0.12) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AboutPage() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   return (
     <main style={{ background: '#050505', minHeight: '100vh', overflowX: 'clip' }}>
 
@@ -147,9 +155,9 @@ export default function AboutPage() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 48,
-            marginTop: 72,
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: isMobile ? 24 : 48,
+            marginTop: isMobile ? 48 : 72,
             paddingTop: 48,
             borderTop: RULE,
           }}>
@@ -176,19 +184,19 @@ export default function AboutPage() {
       </section>
 
       {/* ── Stats ────────────────────────────────────────────────────────────── */}
-      <StatsRow />
+      <StatsRow isMobile={isMobile} />
 
       {/* ── Misión ───────────────────────────────────────────────────────────── */}
-      <MissionSection />
+      <MissionSection isMobile={isMobile} />
 
       {/* ── Valores ──────────────────────────────────────────────────────────── */}
-      <ValuesSection />
+      <ValuesSection isMobile={isMobile} />
 
       {/* ── Equipo ───────────────────────────────────────────────────────────── */}
-      <TeamSection />
+      <TeamSection isMobile={isMobile} />
 
       {/* ── Historia ─────────────────────────────────────────────────────────── */}
-      <TimelineSection />
+      <TimelineSection isMobile={isMobile} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <LandingFooter />
@@ -199,7 +207,7 @@ export default function AboutPage() {
 
 // ─── Stats row ────────────────────────────────────────────────────────────────
 
-function StatsRow() {
+function StatsRow({ isMobile }: { isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
   return (
     <section ref={ref} style={{ position: 'relative', zIndex: 1, borderBottom: RULE }}>
@@ -207,18 +215,24 @@ function StatsRow() {
         maxWidth: 1200, margin: '0 auto',
         padding: 'clamp(56px, 7vw, 96px) clamp(24px, 5vw, 80px)',
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+        gap: isMobile ? '1px' : 0,
+        background: isMobile ? 'rgba(255,255,255,0.07)' : 'transparent',
       }}>
         {STATS.map((s, i) => (
           <div key={i} style={{
-            borderLeft: i === 0 ? 'none' : RULE,
-            paddingLeft: i === 0 ? 0 : 40,
+            background: '#050505',
+            borderLeft: !isMobile && i !== 0 ? RULE : 'none',
+            paddingTop: isMobile ? 24 : 0,
+            paddingBottom: isMobile ? 24 : 0,
+            paddingLeft: isMobile ? 20 : (i === 0 ? 0 : 40),
+            paddingRight: isMobile ? 20 : 0,
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(24px)',
             transition: `opacity 0.9s ease ${i * 0.12}s, transform 0.9s ease ${i * 0.12}s`,
           }}>
             <div style={{
-              fontSize: 'clamp(36px, 4.5vw, 64px)',
+              fontSize: isMobile ? 'clamp(28px, 8vw, 48px)' : 'clamp(36px, 4.5vw, 64px)',
               fontWeight: 200,
               letterSpacing: '-0.04em',
               color: i === 2 ? ACCENT : '#fff',
@@ -247,7 +261,7 @@ function StatsRow() {
 
 // ─── Mission ──────────────────────────────────────────────────────────────────
 
-function MissionSection() {
+function MissionSection({ isMobile }: { isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
   return (
     <section ref={ref} style={{ position: 'relative', zIndex: 1, borderBottom: RULE }}>
@@ -255,8 +269,8 @@ function MissionSection() {
         maxWidth: 1200, margin: '0 auto',
         padding: 'clamp(64px, 9vw, 128px) clamp(24px, 5vw, 80px)',
         display: 'grid',
-        gridTemplateColumns: '280px 1fr',
-        gap: 80,
+        gridTemplateColumns: isMobile ? '1fr' : '280px 1fr',
+        gap: isMobile ? 32 : 80,
       }}>
         {/* Left label */}
         <div style={{
@@ -322,7 +336,7 @@ function MissionSection() {
 
 // ─── Values ───────────────────────────────────────────────────────────────────
 
-function ValuesSection() {
+function ValuesSection({ isMobile }: { isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
   return (
     <section ref={ref} style={{ position: 'relative', zIndex: 1, borderBottom: RULE }}>
@@ -348,14 +362,17 @@ function ValuesSection() {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
           borderTop: RULE,
         }}>
           {VALUES.map((v, i) => (
             <div key={i} style={{
-              padding: '40px 40px 40px 0',
-              paddingLeft: i === 0 ? 0 : 40,
-              borderLeft: i === 0 ? 'none' : RULE,
+              paddingTop: 40,
+              paddingBottom: 40,
+              paddingRight: isMobile ? 0 : 40,
+              paddingLeft: isMobile ? 0 : (i === 0 ? 0 : 40),
+              borderLeft: !isMobile && i !== 0 ? RULE : 'none',
+              borderTop: isMobile && i > 0 ? RULE : 'none',
               opacity: visible ? 1 : 0,
               transform: visible ? 'translateY(0)' : 'translateY(24px)',
               transition: `opacity 0.9s ease ${i * 0.15}s, transform 0.9s ease ${i * 0.15}s`,
@@ -400,7 +417,7 @@ function ValuesSection() {
 
 // ─── Team ─────────────────────────────────────────────────────────────────────
 
-function TeamSection() {
+function TeamSection({ isMobile }: { isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
   return (
     <section ref={ref} style={{ position: 'relative', zIndex: 1, borderBottom: RULE }}>
@@ -433,13 +450,13 @@ function TeamSection() {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
           gap: 1,
           background: 'rgba(255,255,255,0.07)',
           border: RULE,
         }}>
           {TEAM.map((m, i) => (
-            <TeamCard key={i} member={m} index={i} visible={visible} />
+            <TeamCard key={i} member={m} index={i} visible={visible} isMobile={isMobile} />
           ))}
         </div>
       </div>
@@ -448,11 +465,12 @@ function TeamSection() {
 }
 
 function TeamCard({
-  member, index, visible,
+  member, index, visible, isMobile,
 }: {
   member: typeof TEAM[0]
   index: number
   visible: boolean
+  isMobile: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -461,7 +479,7 @@ function TeamCard({
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered ? 'rgba(255,255,255,0.03)' : '#050505',
-        padding: '40px 36px',
+        padding: isMobile ? '24px 20px' : '40px 36px',
         transition: `background 0.3s ease, opacity 0.9s ease ${index * 0.08}s, transform 0.9s ease ${index * 0.08}s`,
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(20px)',
@@ -540,7 +558,7 @@ function TeamCard({
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────
 
-function TimelineSection() {
+function TimelineSection({ isMobile }: { isMobile: boolean }) {
   const { ref, visible } = useFadeIn()
   return (
     <section ref={ref} style={{ position: 'relative', zIndex: 1, borderBottom: RULE }}>
@@ -568,20 +586,19 @@ function TimelineSection() {
           {MILESTONES.map((m, i) => (
             <div key={i} style={{
               display: 'grid',
-              gridTemplateColumns: '120px 1px 1fr',
-              gap: '0 40px',
-              marginBottom: i < MILESTONES.length - 1 ? 0 : 0,
+              gridTemplateColumns: isMobile ? '72px 1fr' : '120px 1px 1fr',
+              gap: isMobile ? '0 16px' : '0 40px',
               opacity: visible ? 1 : 0,
               transform: visible ? 'translateY(0)' : 'translateY(20px)',
               transition: `opacity 0.9s ease ${i * 0.15}s, transform 0.9s ease ${i * 0.15}s`,
             }}>
               {/* Year */}
               <div style={{
-                paddingTop: 40,
-                paddingBottom: 40,
+                paddingTop: isMobile ? 24 : 40,
+                paddingBottom: isMobile ? 24 : 40,
               }}>
                 <span style={{
-                  fontSize: 'clamp(28px, 3vw, 42px)',
+                  fontSize: isMobile ? 'clamp(18px, 4vw, 24px)' : 'clamp(28px, 3vw, 42px)',
                   fontWeight: 200,
                   letterSpacing: '-0.04em',
                   color: i === MILESTONES.length - 1 ? ACCENT : 'rgba(255,255,255,0.25)',
@@ -591,30 +608,32 @@ function TimelineSection() {
                 </span>
               </div>
 
-              {/* Spine */}
-              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                <div style={{
-                  width: 1,
-                  height: '100%',
-                  background: i === MILESTONES.length - 1
-                    ? `linear-gradient(to bottom, ${ACCENT}66, transparent)`
-                    : 'rgba(255,255,255,0.07)',
-                }} />
-                <div style={{
-                  position: 'absolute',
-                  top: 44,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 7, height: 7,
-                  borderRadius: '50%',
-                  background: i === MILESTONES.length - 1 ? ACCENT : 'rgba(255,255,255,0.2)',
-                }} />
-              </div>
+              {/* Spine — desktop only */}
+              {!isMobile && (
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{
+                    width: 1,
+                    height: '100%',
+                    background: i === MILESTONES.length - 1
+                      ? `linear-gradient(to bottom, ${ACCENT}66, transparent)`
+                      : 'rgba(255,255,255,0.07)',
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 44,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 7, height: 7,
+                    borderRadius: '50%',
+                    background: i === MILESTONES.length - 1 ? ACCENT : 'rgba(255,255,255,0.2)',
+                  }} />
+                </div>
+              )}
 
               {/* Content */}
               <div style={{
-                paddingTop: 38,
-                paddingBottom: 40,
+                paddingTop: isMobile ? 24 : 38,
+                paddingBottom: isMobile ? 24 : 40,
                 borderBottom: i < MILESTONES.length - 1 ? RULE : 'none',
               }}>
                 <p style={{
@@ -627,7 +646,7 @@ function TimelineSection() {
                   {m.label}
                 </p>
                 <p style={{
-                  fontSize: 'clamp(15px, 1.4vw, 18px)',
+                  fontSize: isMobile ? 14 : 'clamp(15px, 1.4vw, 18px)',
                   fontWeight: 300,
                   color: i === MILESTONES.length - 1 ? '#fff' : 'rgba(255,255,255,0.6)',
                   lineHeight: 1.7,
