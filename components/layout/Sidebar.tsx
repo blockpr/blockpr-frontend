@@ -184,7 +184,7 @@ export function Sidebar() {
                 className="w-9 h-9 rounded-full overflow-hidden hover:ring-2 hover:ring-[var(--color-border)] transition-all"
                 onClick={e => e.stopPropagation()}
               >
-                <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
+                <UserAvatar name={footerPrimaryText} />
               </button>
             </div>
           </div>
@@ -249,7 +249,7 @@ export function Sidebar() {
                 <div className="absolute bottom-full left-2 right-2 mb-1.5 z-50 bg-[var(--color-card)] border border-[var(--color-border)] rounded-[8px] shadow-xl overflow-hidden">
                   {/* Header usuario */}
                   <div className="flex items-center gap-3 px-3 py-3 border-b border-[var(--color-border)]">
-                    <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
+                    <UserAvatar name={footerPrimaryText} />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[var(--color-text-primary)] truncate leading-none mb-1">
                         {footerPrimaryText}
@@ -302,7 +302,7 @@ export function Sidebar() {
                 onClick={() => setPopoverOpen((o) => !o)}
                 className="w-full flex items-center gap-3 px-3 py-3 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)] transition-colors group text-left rounded-[6px]"
               >
-                <UserAvatar name={footerPrimaryText} image={session?.user?.image} />
+                <UserAvatar name={footerPrimaryText} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--color-text-primary)] truncate leading-none mb-1">
                     {footerPrimaryText}

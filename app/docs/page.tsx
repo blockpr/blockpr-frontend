@@ -99,8 +99,16 @@ export default function DocsPage() {
   }, [])
 
   function scrollTo(id: string) {
+    const container = contentRef.current
     const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (!container || !el) return
+    // Scroll explícito del panel (scrollIntoView a veces no mueve este overflow-y-auto).
+    // sticky top bar h-16 (64px) + margen
+    const stickyOffset = 72
+    const top =
+      el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
+    container.scrollTo({ top: Math.max(0, top - stickyOffset), behavior: 'smooth' })
+    setActiveSection(id)
   }
 
   return (
@@ -133,6 +141,7 @@ export default function DocsPage() {
             {NAV_SECTIONS.map(({ id, label }) => (
               <button
                 key={id}
+                type="button"
                 onClick={() => scrollTo(id)}
                 className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                   activeSection === id
@@ -190,7 +199,7 @@ X-API-Key: YOUR_API_KEY`} />
                 </div>
                 <div>
                   <p className="text-xs text-[var(--color-text-secondary)] mb-2">
-                    Para <code>POST /public/certificates/by-api-key</code>:
+                    Para <code>POST /public/certificates/list</code>:
                   </p>
                   <CodeBlock code={`{
   "api_key": "bpk_..."
@@ -293,7 +302,7 @@ X-API-Key: YOUR_API_KEY`} />
               <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--color-border)]">
                 <MethodBadge method="POST" />
                 <code className="text-sm font-mono text-[var(--color-text-primary)]">
-                  /public/certificates/by-api-key
+                  /public/certificates/list
                 </code>
               </div>
               <div className="p-5 space-y-5">
@@ -342,7 +351,7 @@ X-API-Key: YOUR_API_KEY`} />
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
                     Ejemplo — cURL
                   </p>
-                  <CodeBlock code={`curl -X POST ${API_BASE}/public/certificates/by-api-key \\
+                  <CodeBlock code={`curl -X POST ${API_BASE}/public/certificates/list \\
   -H "Content-Type: application/json" \\
   -d '{"api_key":"bpk_..."}'`} />
                 </div>
@@ -430,7 +439,7 @@ X-API-Key: YOUR_API_KEY`} />
                 'Las transacciones se registran en la blockchain de Solana usando el programa Memo',
                 <>Podés usar los campos <code className="text-[var(--color-text-primary)]">pdf</code>, <code className="text-[var(--color-text-primary)]">file</code> o <code className="text-[var(--color-text-primary)]">document</code> para enviar el archivo</>,
                 <>El campo <code className="text-[var(--color-text-primary)]">metadata</code> debe ser un string JSON válido</>,
-                <>Para <code className="text-[var(--color-text-primary)]">/public/certificates/hash</code> la API key va en header; para <code className="text-[var(--color-text-primary)]">/public/certificates/by-api-key</code> va en body como <code className="text-[var(--color-text-primary)]">api_key</code>.</>,
+                <>Para <code className="text-[var(--color-text-primary)]">/public/certificates/hash</code> la API key va en header; para <code className="text-[var(--color-text-primary)]">/public/certificates/list</code> va en body como <code className="text-[var(--color-text-primary)]">api_key</code>.</>,
               ].map((note, i) => (
                 <div key={i} className="flex items-start gap-3 px-5 py-3.5 text-sm text-[var(--color-text-secondary)]">
                   <span className="mt-1.5 w-1 h-1 rounded-full bg-[var(--color-text-muted)] shrink-0" />
