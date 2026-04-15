@@ -14,7 +14,7 @@ const STATS = [
   { value: '2025',  label: 'Año de\nfundación' },
   { value: '4',     label: 'Personas\nen el equipo' },
   { value: '10+',   label: 'Empresas\nactivas' },
-  { value: '3.7M+', label: 'Documentos\nprotegidos' },
+  { value: '115k +', label: 'Documentos\nprotegidos' },
 ]
 
 const VALUES = [
@@ -37,28 +37,36 @@ const VALUES = [
 
 const TEAM = [
   {
-    initials: 'MR',
-    name: 'Matías Rodríguez',
-    role: 'CEO & Co-Fundador',
-    bio: 'Ex-CTO en una fintech regional con operaciones en 6 países. Obsesionado con la confianza digital desde 2018.',
+    initials: 'FG',
+    name: 'Facundo Girardi',
+    role: 'Co-Fundador',
+    bio: '',
+    linkedin: 'https://www.linkedin.com/in/facugirardi/',
+    email: 'facugirardi22@gmail.com',
   },
   {
-    initials: 'LM',
-    name: 'Laura Méndez',
-    role: 'CTO & Co-Fundadora',
-    bio: 'Ingeniera de sistemas. Construyó infraestructura de identidad para tres unicornios latinoamericanos antes de los 30.',
+    initials: 'AV',
+    name: 'Alejo Vaquero',
+    role: 'Co-Fundador',
+    bio: '',
+    linkedin: 'https://www.linkedin.com/in/alejovaquero/',
+    email: 'alejo.vyornet31@gmail.com',
   },
   {
-    initials: 'SV',
-    name: 'Santiago Vidal',
-    role: 'Head of Product',
-    bio: 'Diseñador de productos con 10 años en B2B SaaS. Cree que la experiencia de usuario es un problema político, no estético.',
+    initials: 'OF',
+    name: 'Octavio Ferreyra',
+    role: 'Co-Fundador',
+    bio: '',
+    linkedin: 'https://www.linkedin.com/in/octavio-ferreyra-42b101247/',
+    email: null,
   },
   {
-    initials: 'VC',
-    name: 'Valentina Cruz',
-    role: 'Lead Engineer',
-    bio: 'Especialista en criptografía aplicada y Solana. Contribuidora activa de tres proyectos open-source en el ecosistema.',
+    initials: 'TA',
+    name: 'Tomas Altero',
+    role: 'Co-Fundador',
+    bio: '',
+    linkedin: 'https://www.linkedin.com/in/tomas-altero/',
+    email: 'tomialtero@gmail.com',
   },
 ]
 
@@ -467,7 +475,7 @@ function TeamSection({ isMobile }: { isMobile: boolean }) {
 function TeamCard({
   member, index, visible, isMobile,
 }: {
-  member: typeof TEAM[0]
+  member: typeof TEAM[number]
   index: number
   visible: boolean
   isMobile: boolean
@@ -536,21 +544,25 @@ function TeamCard({
 
       {/* Icons */}
       <div style={{ display: 'flex', gap: 16 }}>
-        <a href="#" style={{ color: DIM, transition: 'color 0.2s ease' }}
+        <a href={member.linkedin} target="_blank" rel="noopener noreferrer"
+          style={{ color: DIM, transition: 'color 0.2s ease' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
           onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
           </svg>
         </a>
-        <a href="#" style={{ color: DIM, transition: 'color 0.2s ease' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-          onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <path d="M2 7l10 7 10-7"/>
-          </svg>
-        </a>
+        {member.email && (
+          <a href={`mailto:${member.email}`}
+            style={{ color: DIM, transition: 'color 0.2s ease' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="M2 7l10 7 10-7"/>
+            </svg>
+          </a>
+        )}
       </div>
     </div>
   )

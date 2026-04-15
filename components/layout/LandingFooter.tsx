@@ -476,7 +476,7 @@ function FooterWordmark() {
     let tcGrid: number[][] = []
 
     function build() {
-      const fontSize = Math.round(H * 0.82)
+      let fontSize = Math.round(H * 0.82)
 
       const oc       = document.createElement('canvas')
       oc.width       = W
@@ -484,6 +484,15 @@ function FooterWordmark() {
       const octx     = oc.getContext('2d')!
       octx.fillStyle = '#fff'
       octx.font      = `100 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`
+
+      // Auto-fit: escalar si el texto excede el ancho disponible
+      const measured = octx.measureText('unickeys').width
+      const maxWidth = W * 0.94
+      if (measured > maxWidth) {
+        fontSize = Math.round(fontSize * maxWidth / measured)
+        octx.font = `100 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`
+      }
+
       octx.textAlign    = 'left'
       octx.textBaseline = 'middle'
       octx.fillText('unickeys', W * 0.03, oc.height / 2)
