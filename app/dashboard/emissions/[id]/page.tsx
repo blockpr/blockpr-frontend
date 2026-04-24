@@ -233,9 +233,9 @@ export default function EmissionDetailPage() {
         </div>
         <dl className="px-6">
           <DetailRow label="Hash SHA-256">
-            <div className="space-y-1.5">
+            <div className="flex flex-col items-center space-y-1.5">
               <HashDisplay hash={emission.hash} />
-              <p className="text-xs text-[var(--color-text-muted)]">Huella digital unica del certificado</p>
+              <p className="text-xs text-[var(--color-text-muted)] text-center">Huella digital única del certificado</p>
             </div>
           </DetailRow>
         </dl>
